@@ -46,28 +46,35 @@ interface SessionsResponse {
 }
 
 interface Activity {
-  type: string;
-  message: string;
+  name: string;
   createTime: string;
+  originator: "user" | "agent";
+  id: string;
+  planGenerated?: { plan: any };
+  planApproved?: { planId: string };
+  progressUpdated?: { title: string; description?: string };
+  sessionCompleted?: {};
+  // Other fields as needed
 }
 
 interface ActivitiesResponse {
   activities: Activity[];
 }
 
-function getActivityIcon(type: string): string {
-  switch (type) {
-    case "plan":
-      return "📝";
-    case "complete":
-      return "✅";
-    case "error":
-      return "❌";
-    case "info":
-      return "ℹ️";
-    default:
-      return "🔄";
+function getActivityIcon(activity: Activity): string {
+  if (activity.planGenerated) {
+    return "📝";
   }
+  if (activity.planApproved) {
+    return "👍";
+  }
+  if (activity.progressUpdated) {
+    return "🔄";
+  }
+  if (activity.sessionCompleted) {
+    return "✅";
+  }
+  return "ℹ️";
 }
 
 class JulesSessionsProvider
@@ -411,6 +418,24 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
       try {
+        const sessionResponse = await fetch(
+          `https://jules.googleapis.com/v1alpha/${sessionId}`,
+          {
+            method: "GET",
+            headers: {
+              "X-Goog-Api-Key": apiKey,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (!sessionResponse.ok) {
+          const errorText = await sessionResponse.text();
+          vscode.window.showErrorMessage(
+            `Session not found: ${sessionResponse.status} ${sessionResponse.statusText} - ${errorText}`
+          );
+          return;
+        }
+        const session = (await sessionResponse.json()) as Session;
         const response = await fetch(
           `https://jules.googleapis.com/v1alpha/${sessionId}/activities`,
           {
@@ -422,8 +447,9 @@ export function activate(context: vscode.ExtensionContext) {
           }
         );
         if (!response.ok) {
+          const errorText = await response.text();
           vscode.window.showErrorMessage(
-            `Failed to fetch activities: ${response.status} ${response.statusText}`
+            `Failed to fetch activities: ${response.status} ${response.statusText} - ${errorText}`
           );
           return;
         }
@@ -436,13 +462,35 @@ export function activate(context: vscode.ExtensionContext) {
         activitiesChannel.show();
         activitiesChannel.appendLine(`Activities for session: ${sessionId}`);
         activitiesChannel.appendLine("---");
-        data.activities.forEach((activity) => {
-          const icon = getActivityIcon(activity.type);
-          const timestamp = new Date(activity.createTime).toLocaleString();
-          activitiesChannel.appendLine(
-            `${icon} ${timestamp}: ${activity.message}`
-          );
-        });
+        if (data.activities.length === 0) {
+          activitiesChannel.appendLine("No activities found for this session.");
+        } else {
+          data.activities.forEach((activity) => {
+            const icon = getActivityIcon(activity);
+            const timestamp = new Date(activity.createTime).toLocaleString();
+            let message = "";
+            if (activity.planGenerated) {
+              message = `Plan generated: ${
+                activity.planGenerated.plan?.title || "Plan"
+              }`;
+            } else if (activity.planApproved) {
+              message = `Plan approved: ${activity.planApproved.planId}`;
+            } else if (activity.progressUpdated) {
+              message = `Progress: ${activity.progressUpdated.title}${
+                activity.progressUpdated.description
+                  ? " - " + activity.progressUpdated.description
+                  : ""
+              }`;
+            } else if (activity.sessionCompleted) {
+              message = "Session completed";
+            } else {
+              message = "Unknown activity";
+            }
+            activitiesChannel.appendLine(
+              `${icon} ${timestamp} (${activity.originator}): ${message}`
+            );
+          });
+        }
         await context.globalState.update("currentSessionId", sessionId);
       } catch (error) {
         vscode.window.showErrorMessage(
