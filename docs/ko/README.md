@@ -1,34 +1,104 @@
 # VSCode용 Jules 확장 프로그램
 
-> "VSCode에서 Google Jules 사용"
+[![VSCode Extension](https://img.shields.io/badge/VSCode-Extension-blue.svg)](https://marketplace.visualstudio.com/items?itemName=YOUR_PUBLISHER.jules-extension)
+[![Status](https://img.shields.io/badge/status-development-yellow.svg)](#)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-Jules Extension은 Google의 AI 코딩 에이전트 Jules를 VSCode 내에서 직접 조작할 수 있게 해주는 확장 프로그램입니다.
+> "VSCode에서 Google Jules와 함께 코딩의 미래를 경험하세요"
 
-## 상태
+Jules 확장 프로그램은 Google의 AI 코딩 에이전트 **Jules**를 VSCode 내에서 직접 조작할 수 있게 해주는 확장 프로그램입니다.
+코딩 워크플로우에 지능적인 파트너를 맞이하세요.
 
-🚧 **개발 중** - 0단계 MVP
+## ✨ 컨셉
 
-## 예정 기능
+이 확장 프로그램은 개발 경험을 한 단계 끌어올리기 위해 만들어졌습니다.
 
-- 📝 VSCode에서 코딩 세션 생성
-- 📊 세션 진행 상황 실시간 모니터링
-- 🔍 상세 활동 로그 보기
-- 🚀 자동 PR 생성
-- 📚 세션 기록 관리
+- **원활한 통합:** 평소 사용하던 VSCode 환경을 벗어나지 않고 Jules의 강력한 기능에 액세스할 수 있습니다.
+- **실시간 협업:** 코딩 세션 생성부터 진행 상황 확인까지 모든 것이 실시간으로 이루어집니다.
+- **생산성 향상:** 지루한 작업은 Jules에게 맡기고 창의적인 작업에 집중하세요.
 
-## 설치
+## 🚀 주요 기능
 
-준비 중...
+| 기능                   | 설명                                                                                 | 명령어 / 아이콘                   |
+| :--------------------- | :----------------------------------------------------------------------------------- | :-------------------------------- |
+| **API 키 설정**        | Jules API 사용을 위한 API 키를 안전하게 설정하고 검증합니다.                         | `jules-extension.setApiKey`       |
+| **세션 관리**          | 새로운 코딩 세션을 시작하고 목록에서 관리합니다.                                     | `jules-extension.createSession`   |
+| **실시간 모니터링**    | `$(robot)` 아이콘이 있는 전용 보기에서 활성 세션의 상태를 실시간으로 추적합니다.       | `julesSessionsView`               |
+| **진행 상황 업데이트** | `$(refresh)` 버튼 하나로 세션 및 활동에 대한 최신 정보를 가져옵니다.                  | `jules-extension.refreshSessions` |
+| **활동 표시**          | Jules가 실행한 자세한 작업 로그를 확인합니다.                                        | `jules-extension.showActivities`  |
+
+### 미리보기: Jules 세션 보기
+
+```
+┌──────────────────────────────┐
+│ ▼ JULES SESSIONS        ↻    │
+├──────────────────────────────┤
+│  ▶ session-xyz-123 (Running) │
+│  ▶ session-abc-456 (Active)  │
+│  ⏹ session-def-789 (Done)    │
+└──────────────────────────────┘
+```
+
+_(이것은 UI 컨셉입니다. 실제 디스플레이는 다를 수 있습니다.)_
+
+## 📦 설치
+
+### 마켓플레이스에서 (권장)
+
+1.  VSCode 마켓플레이스에서 "Jules Extension"을 검색합니다 (곧 제공될 예정).
+2.  `Install` 버튼을 클릭합니다.
+
+### VSIX 파일에서 (수동 설치)
+
+마켓플레이스에 아직 게시되지 않은 최신 기능을 사용해 보려면 릴리스 페이지에서 `.vsix` 파일을 직접 다운로드하여 설치할 수 있습니다.
+
+1.  **릴리스 페이지로 이동:**
+    [GitHub 릴리스](https://github.com/your-repo/jules-extension/releases)를 방문하여 최신 릴리스 버전을 찾습니다.
+
+2.  **VSIX 파일 다운로드:**
+    `Assets`에서 `.vsix` 파일(예: `jules-extension-0.1.0.vsix`)을 다운로드합니다.
+
+3.  **VSCode에 설치:**
+    - VSCode를 엽니다.
+    - `확장 프로그램` 보기(`Ctrl+Shift+X`)로 이동합니다.
+    - 보기 상단의 `...` (추가 작업) 메뉴를 클릭하고 `VSIX에서 설치...`를 선택합니다.
+    - 다운로드한 `.vsix` 파일을 선택하여 설치합니다.
+
+## 🔑 API 키 받기
+
+Jules 확장 프로그램을 사용하려면 Jules API 키가 필요합니다. 다음 단계에 따라 키를 받으세요:
+
+1.  **계정 생성:**
+    - [Jules 공식 웹사이트](https://jules.google/docs)로 이동합니다.
+    - 새 계정을 등록하거나 이미 계정이 있는 경우 로그인합니다.
+
+2.  **API 키 생성:**
+    - 계정 대시보드에서 "API 키" 또는 "개발자 설정" 섹션으로 이동합니다.
+    - "새 비밀 키 만들기"를 클릭합니다.
+    - 키에 설명이 포함된 이름(예: "VSCode 확장 프로그램")을 지정하고 생성합니다.
+
+3.  **키 복사 및 저장:**
+    - 새 API 키가 표시됩니다. **전체 키를 볼 수 있는 유일한 기회이므로 즉시 복사하세요.**
+    - 안전한 장소에 보관하세요.
+
+> **중요:** API 키를 암호처럼 취급하세요. 공개적으로 공유하거나 버전 제어에 커밋하지 마세요.
 
 ## 빠른 시작
 
-준비 중...
+1.  `Ctrl + Shift + P` (또는 `Cmd + Shift + P`)를 눌러 명령 팔레트를 엽니다.
+2.  `> Jules: Set Jules API Key`를 실행하고 API 키를 입력합니다.
+3.  사이드바에서 `$(robot)` 아이콘을 클릭하여 Jules 세션 보기를 엽니다.
+4.  `> Jules: Create Jules Session`를 실행하여 첫 번째 코딩 세션을 시작하세요!
 
-## 참조
+## ⚠️ 중요 참고사항
 
-- [Jules 공식 웹사이트](https://jules.google/docs)
-- [Jules API 문서](https://developers.google.com/jules/api)
+- **카드 블록 렌더링:** 카드 블록으로 표시되는 기능을 사용할 때 콘텐츠 구조가 올바르게 렌더링되도록 주의하십시오.
 
-## 라이선스
+## 🤝 기여
 
-MIT
+이 프로젝트는 이제 막 시작되었습니다. 버그 보고, 기능 제안, 풀 리퀘스트 등 모든 형태의 기여를 환영합니다!
+이슈 트래커와 풀 리퀘스트를 확인해주세요.
+
+## 📝 라이선스
+
+[MIT](LICENSE)
