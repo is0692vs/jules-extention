@@ -2,7 +2,8 @@
   "name": "jules-extension",
   "displayName": "jules-extension",
   "description": "VS Code extension for Jules AI",
-  "version": "0.0.1",
+  "version": "0.1.1",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/is0692vs/jules-extension.git"
@@ -64,6 +65,11 @@
       {
         "command": "jules-extension.sendMessage",
         "title": "Send Message to Jules Session"
+      },
+      {
+        "command": "jules-extension.approvePlan",
+        "title": "Approve Jules Plan",
+        "category": "Jules"
       }
     ],
     "views": {
