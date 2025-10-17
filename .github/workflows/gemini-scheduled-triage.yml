@@ -2,9 +2,7 @@ name: '📋 Gemini Scheduled Issue Triage'
 
 on:
   schedule:
-    - cron: '*/30 * * * *' # Runs every 30 minutes
-  issues:
-    types: [opened]
+    - cron: '0 * * * *' # Runs every hour
   pull_request:
     branches:
       - 'main'
@@ -215,7 +213,7 @@ jobs:
 
                 - `labels_to_set` (Array of Strings): The list of labels to be applied.
 
-                - `explanation` (String): A brief, one-sentence justification for the chosen labels. Unless otherwise specified in the prompt, the explanation should be in Japanese.
+                - `explanation` (String): A brief, one-sentence justification for the chosen labels.
 
             **Example Output JSON:**
 
