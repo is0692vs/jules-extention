@@ -38,7 +38,66 @@ interface Session {
   name: string;
   title: string;
   state: "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED";
+  outputs?: {
+    pullRequestUrl?: string;
+    result?: {
+      prUrl?: string;
+    };
+  };
   // Add other fields if needed
+}
+
+interface SessionState {
+  name: string;
+  state: string;
+  outputs?: any;
+}
+
+let previousSessionStates: Map<string, SessionState> = new Map();
+
+function checkForCompletedSessions(currentSessions: Session[]): Session[] {
+  const completedSessions: Session[] = [];
+  for (const session of currentSessions) {
+    const prevState = previousSessionStates.get(session.name);
+    if (
+      prevState &&
+      prevState.state === "RUNNING" &&
+      session.state === "COMPLETED"
+    ) {
+      completedSessions.push(session);
+    }
+  }
+  return completedSessions;
+}
+
+function extractPRUrl(session: Session): string | null {
+  if (session.outputs?.pullRequestUrl) {
+    return session.outputs.pullRequestUrl;
+  }
+  if (session.outputs?.result?.prUrl) {
+    return session.outputs.result.prUrl;
+  }
+  return null;
+}
+
+async function notifyPRCreated(session: Session, prUrl: string): Promise<void> {
+  const result = await vscode.window.showInformationMessage(
+    `Session "${session.title}" has completed and created a PR!`,
+    "Open PR"
+  );
+  if (result === "Open PR") {
+    vscode.env.openExternal(vscode.Uri.parse(prUrl));
+  }
+}
+
+function updatePreviousStates(currentSessions: Session[]): void {
+  for (const session of currentSessions) {
+    previousSessionStates.set(session.name, {
+      name: session.name,
+      state: session.state,
+      outputs: session.outputs,
+    });
+  }
 }
 
 interface SessionsResponse {
@@ -89,7 +148,16 @@ class JulesSessionsProvider
 
   constructor(private context: vscode.ExtensionContext) {}
 
-  refresh(): void {
+  async refresh(): Promise<void> {
+    const sessions = (await this.fetchSessions()).map((item) => item.session);
+    const completedSessions = checkForCompletedSessions(sessions);
+    for (const session of completedSessions) {
+      const prUrl = extractPRUrl(session);
+      if (prUrl) {
+        await notifyPRCreated(session, prUrl);
+      }
+    }
+    updatePreviousStates(sessions);
     this._onDidChangeTreeData.fire();
   }
 
