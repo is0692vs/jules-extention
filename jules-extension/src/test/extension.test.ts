@@ -3,7 +3,7 @@ import * as assert from "assert";
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as vscode from "vscode";
-// import * as myExtension from '../../extension';
+import { SessionTreeItem } from "../extension";
 
 suite("Extension Test Suite", () => {
   vscode.window.showInformationMessage("Start all tests.");
@@ -65,6 +65,16 @@ suite("Extension Test Suite", () => {
     test("SessionTreeItem should use mapped state for display", () => {
       // Verify that UI displays the mapped state, not the raw API state
       assert.strictEqual(true, true);
+    });
+
+    test("SessionTreeItem exposes context value for view menus", () => {
+      const item = new SessionTreeItem({
+        name: "sessions/123",
+        title: "Test Session",
+        state: "RUNNING",
+      } as any);
+
+      assert.strictEqual(item.contextValue, "jules-session");
     });
   });
 
