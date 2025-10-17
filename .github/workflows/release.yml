@@ -35,10 +35,22 @@ jobs:
               working-directory: ./jules-extension
 
             - name: Create Release
-              uses: softprops/action-gh-release@v1
+              uses: actions/create-release@v1
+              id: create_release
               with:
-                  files: "./jules-extension/*.vsix"
+                  tag_name: ${{ github.ref }}
+                  release_name: Release ${{ github.ref }}
                   draft: false
                   prerelease: false
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Upload VSIX to Release
+              uses: actions/upload-release-asset@v1
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: ./jules-extension/jules-extension-*.vsix
+                  asset_name: jules-extension.vsix
+                  asset_content_type: application/octet-stream
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
