@@ -13,7 +13,7 @@
 
 - 推奨拡張機能をインストールしてください（amodio.tsl-problem-matcher、ms-vscode.extension-test-runner、dbaeumer.vscode-eslint）。
 
-## すぐに使い始める
+## クイックスタート
 
 - `F5` を押すと、拡張機能が読み込まれた新しいウィンドウが開きます。
 - コマンドパレットからコマンドを実行するには（`Ctrl+Shift+P` または Mac では `Cmd+Shift+P` を押して）「Hello World」と入力します。
