@@ -1,8 +1,12 @@
 {
   "name": "jules-extension",
   "displayName": "jules-extension",
-  "description": "",
+  "description": "VS Code extension for Jules AI",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/is0692vs/jules-extension.git"
+  },
   "engines": {
     "vscode": "^1.105.0"
   },
