@@ -34,11 +34,94 @@ interface SessionResponse {
   // Add other fields if needed
 }
 
+interface SessionOutput {
+  pullRequest?: {
+    url: string;
+    title: string;
+    description: string;
+  };
+}
+
 interface Session {
   name: string;
   title: string;
   state: "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED";
+  outputs?: SessionOutput[];
   // Add other fields if needed
+}
+
+function mapApiStateToSessionState(
+  apiState: string
+): "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED" {
+  switch (apiState) {
+    case "PLANNING":
+    case "AWAITING_PLAN_APPROVAL":
+    case "AWAITING_USER_FEEDBACK":
+    case "IN_PROGRESS":
+    case "QUEUED":
+    case "STATE_UNSPECIFIED":
+      return "RUNNING";
+    case "COMPLETED":
+      return "COMPLETED";
+    case "FAILED":
+      return "FAILED";
+    case "PAUSED":
+    case "CANCELLED":
+      return "CANCELLED";
+    default:
+      return "RUNNING"; // default to RUNNING
+  }
+}
+
+interface SessionState {
+  name: string;
+  state: string;
+  outputs?: SessionOutput[];
+}
+
+let previousSessionStates: Map<string, SessionState> = new Map();
+
+function extractPRUrl(session: Session): string | null {
+  return session.outputs?.find((o) => o.pullRequest)?.pullRequest?.url || null;
+}
+
+function extractPRUrlFromState(state: SessionState): string | null {
+  return state.outputs?.find((o) => o.pullRequest)?.pullRequest?.url || null;
+}
+
+function checkForCompletedSessions(currentSessions: Session[]): Session[] {
+  const completedSessions: Session[] = [];
+  for (const session of currentSessions) {
+    if (session.state === "COMPLETED") {
+      const prevState = previousSessionStates.get(session.name);
+      const currentPr = extractPRUrl(session);
+      const prevPr = prevState ? extractPRUrlFromState(prevState) : null;
+      if (currentPr && (!prevPr || prevState?.state === "RUNNING")) {
+        completedSessions.push(session);
+      }
+    }
+  }
+  return completedSessions;
+}
+
+async function notifyPRCreated(session: Session, prUrl: string): Promise<void> {
+  const result = await vscode.window.showInformationMessage(
+    `Session "${session.title}" has completed and created a PR!`,
+    "Open PR"
+  );
+  if (result === "Open PR") {
+    vscode.env.openExternal(vscode.Uri.parse(prUrl));
+  }
+}
+
+function updatePreviousStates(currentSessions: Session[]): void {
+  for (const session of currentSessions) {
+    previousSessionStates.set(session.name, {
+      name: session.name,
+      state: session.state,
+      outputs: session.outputs,
+    });
+  }
 }
 
 interface SessionsResponse {
@@ -89,7 +172,16 @@ class JulesSessionsProvider
 
   constructor(private context: vscode.ExtensionContext) {}
 
-  refresh(): void {
+  async refresh(): Promise<void> {
+    const sessions = (await this.fetchSessions()).map((item) => item.session);
+    const completedSessions = checkForCompletedSessions(sessions);
+    for (const session of completedSessions) {
+      const prUrl = extractPRUrl(session);
+      if (prUrl) {
+        await notifyPRCreated(session, prUrl);
+      }
+    }
+    updatePreviousStates(sessions);
     this._onDidChangeTreeData.fire();
   }
 
@@ -128,7 +220,13 @@ class JulesSessionsProvider
       if (!data.sessions || !Array.isArray(data.sessions)) {
         return [];
       }
-      return data.sessions.map((session) => new SessionTreeItem(session));
+      return data.sessions.map((session) => {
+        const mappedSession = {
+          ...session,
+          state: mapApiStateToSessionState(session.state),
+        };
+        return new SessionTreeItem(mappedSession);
+      });
     } catch (error) {
       return [];
     }

@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 jobs:
   test:
@@ -15,20 +15,20 @@ jobs:
         node-version: [18, 20, 22]
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: jules-extention/package-lock.json
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          cache-dependency-path: jules-extension/package-lock.json
 
-    - name: Install dependencies
-      working-directory: ./jules-extention
-      run: npm ci
+      - name: Install dependencies
+        working-directory: ./jules-extension
+        run: npm ci
 
-    - name: Run tests
-      working-directory: ./jules-extention
-      run: xvfb-run -a npm test
+      - name: Run tests
+        working-directory: ./jules-extension
+        run: xvfb-run -a npm test

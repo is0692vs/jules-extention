@@ -1,6 +1,6 @@
 # Jules Extension for VSCode
 
-[![VSCode Extension](https://img.shields.io/badge/VSCode-Extension-blue.svg)](https://marketplace.visualstudio.com/items?itemName=YOUR_PUBLISHER.jules-extention)
+[![VSCode Extension](https://img.shields.io/badge/VSCode-Extension-blue.svg)](https://marketplace.visualstudio.com/items?itemName=YOUR_PUBLISHER.jules-extension)
 [![Status](https://img.shields.io/badge/status-development-yellow.svg)](#)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -13,19 +13,19 @@ Jules Extension は、Google の AI コーディングエージェント **Jules
 
 この拡張機能は、あなたの開発体験を次のレベルへ引き上げるために生まれました。
 
-*   **シームレスな統合:** いつものVSCode環境から離れることなく、Julesのパワフルな機能にアクセス。
-*   **リアルタイム連携:** コーディングセッションの作成から進捗確認まで、すべてをリアルタイムで。
-*   **生産性の飛躍:** 面倒なタスクはJulesに任せて、あなたは創造的な作業に集中できます。
+- **シームレスな統合:** いつもの VSCode 環境から離れることなく、Jules のパワフルな機能にアクセス。
+- **リアルタイム連携:** コーディングセッションの作成から進捗確認まで、すべてをリアルタイムで。
+- **生産性の飛躍:** 面倒なタスクは Jules に任せて、あなたは創造的な作業に集中できます。
 
 ## 🚀 主要機能
 
-| 機能 | 説明 | コマンド / アイコン |
-| :--- | :--- | :--- |
-| **APIキー設定** | Jules APIを利用するためのAPIキーを安全に設定・検証します。 | `jules-extention.setApiKey` |
-| **セッション管理** | 新しいコーディングセッションを開始し、一覧で管理します。 | `jules-extention.createSession` |
-| **リアルタイム監視**| `$(robot)` アイコンの専用ビューで、アクティブなセッションの状況をリアルタイムに追跡できます。 | `julesSessionsView` |
-| **進捗の更新** | `$(refresh)` ボタン一つで、セッションやアクティビティの最新情報を取得します。 | `jules-extention.refreshSessions` |
-| **アクティビティ表示**| Julesが実行した詳細なタスクログを確認できます。 | `jules-extension.showActivities` |
+| 機能                   | 説明                                                                                          | コマンド / アイコン               |
+| :--------------------- | :-------------------------------------------------------------------------------------------- | :-------------------------------- |
+| **API キー設定**       | Jules API を利用するための API キーを安全に設定・検証します。                                 | `jules-extension.setApiKey`       |
+| **セッション管理**     | 新しいコーディングセッションを開始し、一覧で管理します。                                      | `jules-extension.createSession`   |
+| **リアルタイム監視**   | `$(robot)` アイコンの専用ビューで、アクティブなセッションの状況をリアルタイムに追跡できます。 | `julesSessionsView`               |
+| **進捗の更新**         | `$(refresh)` ボタン一つで、セッションやアクティビティの最新情報を取得します。                 | `jules-extension.refreshSessions` |
+| **アクティビティ表示** | Jules が実行した詳細なタスクログを確認できます。                                              | `jules-extension.showActivities`  |
 
 ### プレビュー: Jules Sessions View
 
@@ -38,7 +38,8 @@ Jules Extension は、Google の AI コーディングエージェント **Jules
 │  ⏹ session-def-789 (Done)    │
 └──────────────────────────────┘
 ```
-*(これはUIのイメージです。実際の表示とは異なる場合があります。)*
+
+_(これは UI のイメージです。実際の表示とは異なる場合があります。)_
 
 ## 📦 インストール
 
@@ -48,7 +49,7 @@ Jules Extension は、Google の AI コーディングエージェント **Jules
 ## クイックスタート
 
 1.  `Ctrl + Shift + P` (または `Cmd + Shift + P`) でコマンドパレットを開きます。
-2.  `> Jules: Set Jules API Key` を実行し、あなたのAPIキーを設定します。
+2.  `> Jules: Set Jules API Key` を実行し、あなたの API キーを設定します。
 3.  サイドバーの `$(robot)` アイコンをクリックして、Jules Sessions View を開きます。
 4.  `> Jules: Create Jules Session` を実行して、最初のコーディングセッションを開始しましょう！
 
