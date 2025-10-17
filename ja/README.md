@@ -1,14 +1,8 @@
-# Welcome / ようこそ
+# Jules Extension for VSCode
 
-This document is available in the following languages:
-
-- [English](./en/README.md)
-- [العربية (Arabic)](./ar/README.md)
-- [Español (Spanish)](./es/README.md)
-- [Français (French)](./fr/README.md)
-- [日本語 (Japanese)](./ja/README.md)
-- [한국어 (Korean)](./ko/README.md)
-- [中文 (Chinese)](./zh/README.md)
+[![VSCode Extension](https://img.shields.io/badge/VSCode-Extension-blue.svg)](https://marketplace.visualstudio.com/items?itemName=YOUR_PUBLISHER.jules-extension)
+[![Status](https://img.shields.io/badge/status-development-yellow.svg)](#)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 > "VSCode で Google Jules と共に、コーディングの未来を体験しよう"
 
@@ -35,14 +29,17 @@ Jules Extension は、Google の AI コーディングエージェント **Jules
 
 ### プレビュー: Jules Sessions View
 
-```markdown
+```
 ┌──────────────────────────────┐
-│ ▼ JULES SESSIONS ↻ │
+│ ▼ JULES SESSIONS        ↻    │
 ├──────────────────────────────┤
-│ ▶ session-xyz-123 (Running) │
-│ ▶ session-abc-456 (Active) │
-│ ⏹ session-def-789 (Done) │
+│  ▶ session-xyz-123 (Running) │
+│  ▶ session-abc-456 (Active)  │
+│  ⏹ session-def-789 (Done)    │
 └──────────────────────────────┘
+```
+
+_(これは UI のイメージです。実際の表示とは異なる場合があります。)_
 
 ## 📦 インストール
 
@@ -56,11 +53,6 @@ Jules Extension は、Google の AI コーディングエージェント **Jules
 3.  サイドバーの `$(robot)` アイコンをクリックして、Jules Sessions View を開きます。
 4.  `> Jules: Create Jules Session` を実行して、最初のコーディングセッションを開始しましょう！
 
-## 📚 参考
-
-- [Jules 公式サイト](https://jules.google/docs)
-- [Jules API ドキュメント](https://developers.google.com/jules/api)
-
 ## 🤝 貢献 (Contribution)
 
 このプロジェクトはまだ始まったばかりです。バグ報告、機能提案、プルリクエストなど、あらゆる形の貢献を歓迎します！
@@ -69,4 +61,3 @@ Issue Tracker や Pull Requests をご確認ください。
 ## 📝 ライセンス
 
 [MIT](LICENSE)
-```
