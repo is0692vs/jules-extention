@@ -31,4 +31,4 @@ jobs:
 
     - name: Run tests
       working-directory: ./jules-extention
-      run: npm test
+      run: xvfb-run -a npm test
