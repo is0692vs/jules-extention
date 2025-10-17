@@ -2,13 +2,13 @@
 
 This document is available in the following languages:
 
-- [English](./en/README.md)
-- [العربية (Arabic)](./ar/README.md)
-- [Español (Spanish)](./es/README.md)
-- [Français (French)](./fr/README.md)
-- [日本語 (Japanese)](./ja/README.md)
-- [한국어 (Korean)](./ko/README.md)
-- [中文 (Chinese)](./zh/README.md)
+- [English](./docs/en/README.md)
+- [العربية (Arabic)](./docs/ar/README.md)
+- [Español (Spanish)](./docs/es/README.md)
+- [Français (French)](./docs/fr/README.md)
+- [日本語 (Japanese)](./docs/ja/README.md)
+- [한국어 (Korean)](./docs/ko/README.md)
+- [中文 (Chinese)](./docs/zh/README.md)
 
 > "VSCode で Google Jules と共に、コーディングの未来を体験しよう"
 
