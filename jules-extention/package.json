@@ -12,10 +12,28 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "Jules Extension",
+      "properties": {
+        "jules-extention.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API Key for Jules API"
+        }
+      }
+    },
     "commands": [
       {
         "command": "jules-extention.helloWorld",
         "title": "Hello World"
+      },
+      {
+        "command": "jules-extention.setApiKey",
+        "title": "Set Jules API Key"
+      },
+      {
+        "command": "jules-extention.verifyApiKey",
+        "title": "Verify Jules API Key"
       }
     ]
   },
@@ -34,16 +52,19 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.105.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
+    "@types/vscode": "^1.105.0",
     "@typescript-eslint/eslint-plugin": "^8.45.0",
     "@typescript-eslint/parser": "^8.45.0",
-    "eslint": "^9.36.0",
-    "esbuild": "^0.25.10",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.9.3",
     "@vscode/test-cli": "^0.0.11",
-    "@vscode/test-electron": "^2.5.2"
+    "@vscode/test-electron": "^2.5.2",
+    "esbuild": "^0.25.10",
+    "eslint": "^9.36.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "is-glob": "^4.0.3"
   }
 }
