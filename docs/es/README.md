@@ -77,9 +77,9 @@ Para usar la Extensión de Jules, necesitas una clave de API de Jules. Sigue est
     - Haz clic en "Crear una nueva clave secreta".
     - Dale a tu clave un nombre descriptivo (p. ej., "Extensión de VSCode") y genérala.
 
-3.  **Copia y Almacena tu Clave:**
-    - Se mostrará tu nueva clave de API. **Esta es la única vez que verás la clave completa, así que cópiala de inmediato.**
-    - Guárdala en un lugar seguro.
+3.  **Copia Tu Clave:**
+    - Se mostrará tu nueva clave de API. Cópiala a tu portapapeles.
+    - Si necesitas ver tu clave de nuevo más tarde, siempre puedes encontrarla en tu página de configuración de Jules.
 
 > **Importante:** Trata tu clave de API como una contraseña. No la compartas públicamente ni la incluyas en el control de versiones.
 

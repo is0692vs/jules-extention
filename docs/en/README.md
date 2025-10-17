@@ -77,9 +77,9 @@ To use the Jules Extension, you need a Jules API key. Follow these steps to get 
     - Click on "Create a new secret key".
     - Give your key a descriptive name (e.g., "VSCode Extension") and generate it.
 
-3.  **Copy and Store Your Key:**
-    - Your new API key will be displayed. **This is the only time you will see the full key, so copy it immediately.**
-    - Store it in a safe and secure location.
+3.  **Copy Your Key:**
+    - Your new API key will be displayed. Copy it to your clipboard.
+    - If you need to view your key again later, you can always find it on your Jules settings page.
 
 > **Important:** Treat your API key like a password. Do not share it publicly or commit it to version control.
 
