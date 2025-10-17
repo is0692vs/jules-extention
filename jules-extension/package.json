@@ -3,6 +3,7 @@
   "displayName": "jules-extension",
   "description": "VS Code extension for Jules AI",
   "version": "0.1.1",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/is0692vs/jules-extension.git"
