@@ -19,7 +19,41 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Hello World from jules-extention!');
 	});
 
-	context.subscriptions.push(disposable);
+	const setApiKeyDisposable = vscode.commands.registerCommand('jules-extention.setApiKey', async () => {
+		const apiKey = await vscode.window.showInputBox({
+			prompt: 'Enter your Jules API Key',
+			password: true
+		});
+		if (apiKey) {
+			await context.secrets.store('jules-api-key', apiKey);
+			vscode.window.showInformationMessage('API Key saved securely.');
+		}
+	});
+
+	const verifyApiKeyDisposable = vscode.commands.registerCommand('jules-extention.verifyApiKey', async () => {
+		const apiKey = await context.secrets.get('jules-api-key');
+		if (!apiKey) {
+			vscode.window.showErrorMessage('API Key not found. Please set it first using "Set Jules API Key" command.');
+			return;
+		}
+		try {
+			const response = await fetch('https://api.jules.com/verify', {
+				method: 'GET',
+				headers: {
+					'Authorization': `Bearer ${apiKey}`
+				}
+			});
+			if (response.ok) {
+				vscode.window.showInformationMessage('API Key is valid.');
+			} else {
+				vscode.window.showErrorMessage('API Key is invalid. Please check and set a correct key.');
+			}
+		} catch (error) {
+			vscode.window.showErrorMessage('Failed to verify API Key. Please check your internet connection.');
+		}
+	});
+
+	context.subscriptions.push(disposable, setApiKeyDisposable, verifyApiKeyDisposable);
 }
 
 // This method is called when your extension is deactivated

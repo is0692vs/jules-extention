@@ -12,10 +12,28 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "Jules Extension",
+      "properties": {
+        "jules-extention.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API Key for Jules API"
+        }
+      }
+    },
     "commands": [
       {
         "command": "jules-extention.helloWorld",
         "title": "Hello World"
+      },
+      {
+        "command": "jules-extention.setApiKey",
+        "title": "Set Jules API Key"
+      },
+      {
+        "command": "jules-extention.verifyApiKey",
+        "title": "Verify Jules API Key"
       }
     ]
   },
