@@ -34,6 +34,10 @@
       {
         "command": "jules-extention.verifyApiKey",
         "title": "Verify Jules API Key"
+      },
+      {
+        "command": "jules-extention.listSources",
+        "title": "List Jules Sources"
       }
     ]
   },

@@ -2,6 +2,21 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 
+interface Source {
+  name?: string;
+  id?: string;
+  url?: string;
+  description?: string;
+}
+
+interface SourcesResponse {
+  sources: Source[];
+}
+
+interface SourceQuickPickItem extends vscode.QuickPickItem {
+  source: Source;
+}
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -73,10 +88,66 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  const listSourcesDisposable = vscode.commands.registerCommand(
+    "jules-extention.listSources",
+    async () => {
+      const apiKey = await context.secrets.get("jules-api-key");
+      if (!apiKey) {
+        vscode.window.showErrorMessage(
+          'API Key not found. Please set it first using "Set Jules API Key" command.'
+        );
+        return;
+      }
+      try {
+        const response = await fetch(
+          "https://jules.googleapis.com/v1alpha/sources",
+          {
+            method: "GET",
+            headers: {
+              "X-Goog-Api-Key": apiKey,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (!response.ok) {
+          vscode.window.showErrorMessage(
+            `Failed to fetch sources: ${response.status} ${response.statusText}`
+          );
+          return;
+        }
+        const data = await response.json() as SourcesResponse;
+        if (!data.sources || !Array.isArray(data.sources)) {
+          vscode.window.showErrorMessage("Invalid response format from API.");
+          return;
+        }
+        const items: SourceQuickPickItem[] = data.sources.map((source) => ({
+          label: source.name || source.id || "Unknown",
+          description: source.url || "",
+          detail: source.description || "",
+          source: source,
+        }));
+        const selected: SourceQuickPickItem | undefined = await vscode.window.showQuickPick(items, {
+          placeHolder: "Select a Jules Source",
+        });
+        if (selected) {
+          await context.globalState.update("selectedSource", selected.source);
+          vscode.window.showInformationMessage(
+            `Selected source: ${selected.label}`
+          );
+        }
+      } catch (error) {
+        vscode.window.showErrorMessage(
+          "Failed to fetch sources. Please check your internet connection."
+        );
+      }
+    }
+  );
+
   context.subscriptions.push(
     disposable,
     setApiKeyDisposable,
-    verifyApiKeyDisposable
+    verifyApiKeyDisposable,
+    listSourcesDisposable
   );
 }
 
