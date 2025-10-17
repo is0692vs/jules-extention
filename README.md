@@ -53,6 +53,11 @@ _(これは UI のイメージです。実際の表示とは異なる場合が�
 3.  サイドバーの `$(robot)` アイコンをクリックして、Jules Sessions View を開きます。
 4.  `> Jules: Create Jules Session` を実行して、最初のコーディングセッションを開始しましょう！
 
+## 📚 参考
+
+- [Jules 公式サイト](https://jules.google/docs)
+- [Jules API ドキュメント](https://developers.google.com/jules/api)
+
 ## 🤝 貢献 (Contribution)
 
 このプロジェクトはまだ始まったばかりです。バグ報告、機能提案、プルリクエストなど、あらゆる形の貢献を歓迎します！

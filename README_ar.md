@@ -24,6 +24,11 @@
 
 قريباً...
 
+## مرجع
+
+- [موقع Jules الرسمي](https://jules.google/docs)
+- [وثائق واجهة برمجة تطبيقات Jules](https://developers.google.com/jules/api)
+
 ## الترخيص
 
 MIT
