@@ -233,12 +233,13 @@ class JulesSessionsProvider
   }
 }
 
-class SessionTreeItem extends vscode.TreeItem {
+export class SessionTreeItem extends vscode.TreeItem {
   constructor(public readonly session: Session) {
     super(session.title || session.name, vscode.TreeItemCollapsibleState.None);
     this.tooltip = `${session.name} - ${session.state}`;
     this.description = session.state;
     this.iconPath = this.getIcon(session.state);
+    this.contextValue = "jules-session";
     this.command = {
       command: "jules-extension.showActivities",
       title: "Show Activities",
@@ -259,6 +260,87 @@ class SessionTreeItem extends vscode.TreeItem {
       default:
         return new vscode.ThemeIcon("question");
     }
+  }
+}
+
+async function sendMessageToSession(
+  context: vscode.ExtensionContext,
+  target?: SessionTreeItem | string
+): Promise<void> {
+  const apiKey = await context.secrets.get("jules-api-key");
+  if (!apiKey) {
+    vscode.window.showErrorMessage(
+      'API Key not set. Please configure it using "Set Jules API Key" first.'
+    );
+    return;
+  }
+
+  let sessionId =
+    (typeof target === "string" ? target : undefined) ??
+    (target instanceof SessionTreeItem ? target.session.name : undefined) ??
+    context.globalState.get<string>("active-session-id") ??
+    context.globalState.get<string>("currentSessionId");
+
+  if (!sessionId) {
+    vscode.window.showErrorMessage(
+      "No active session available. Please create or select a session first."
+    );
+    return;
+  }
+
+  const prompt = await vscode.window.showInputBox({
+    prompt: "Enter your message to Jules",
+    placeHolder: "e.g., Can you add unit tests?",
+  });
+
+  if (prompt === undefined) {
+    return;
+  }
+
+  const trimmedPrompt = prompt.trim();
+  if (!trimmedPrompt) {
+    vscode.window.showWarningMessage("Message was empty and not sent.");
+    return;
+  }
+
+  try {
+    await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: "Sending message to Jules...",
+      },
+      async () => {
+        const response = await fetch(
+          `https://jules.googleapis.com/v1alpha/${sessionId}:sendMessage`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Goog-Api-Key": apiKey,
+            },
+            body: JSON.stringify({ prompt: trimmedPrompt }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          const message =
+            errorText || `${response.status} ${response.statusText}`;
+          throw new Error(message);
+        }
+
+        vscode.window.showInformationMessage("Message sent successfully!");
+      }
+    );
+
+    await context.globalState.update("active-session-id", sessionId);
+    // currentSessionId is a legacy key maintained for backward compatibility
+    await context.globalState.update("currentSessionId", sessionId);
+    await vscode.commands.executeCommand("jules-extension.refreshActivities");
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unknown error occurred.";
+    vscode.window.showErrorMessage(`Failed to send message: ${message}`);
   }
 }
 
@@ -590,6 +672,7 @@ export function activate(context: vscode.ExtensionContext) {
           });
         }
         await context.globalState.update("currentSessionId", sessionId);
+        await context.globalState.update("active-session-id", sessionId);
       } catch (error) {
         vscode.window.showErrorMessage(
           "Failed to fetch activities. Please check your internet connection."
@@ -617,6 +700,13 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  const sendMessageDisposable = vscode.commands.registerCommand(
+    "jules-extension.sendMessage",
+    async (item?: SessionTreeItem | string) => {
+      await sendMessageToSession(context, item);
+    }
+  );
+
   context.subscriptions.push(
     disposable,
     setApiKeyDisposable,
@@ -626,7 +716,8 @@ export function activate(context: vscode.ExtensionContext) {
     sessionsTreeView,
     refreshSessionsDisposable,
     showActivitiesDisposable,
-    refreshActivitiesDisposable
+    refreshActivitiesDisposable,
+    sendMessageDisposable
   );
 }
 

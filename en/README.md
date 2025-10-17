@@ -24,6 +24,11 @@ Coming soon...
 
 Coming soon...
 
+## Reference
+
+- [Jules Official Website](https://jules.google/docs)
+- [Jules API Documentation](https://developers.google.com/jules/api)
+
 ## License
 
 MIT

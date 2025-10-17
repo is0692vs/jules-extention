@@ -10,6 +10,7 @@ Jules Extension is a VS Code extension that integrates with the Jules AI platfor
 - **Create Session**: Start new Jules analysis sessions
 - **View Sessions**: Monitor active and completed sessions in the sidebar
 - **Show Activities**: Track session activities and progress
+- **Send Messages**: Chat with Jules sessions without leaving VS Code
 - **GitHub PR Links**: Automatically display GitHub PR links created by Jules
 
 ## Requirements
@@ -32,6 +33,7 @@ This extension contributes the following settings:
 - `Jules Extension: Refresh Jules Sessions` - Reload the sessions list
 - `Jules Extension: Show Jules Activities` - View session activities
 - `Jules Extension: Refresh Jules Activities` - Update activities view
+- `Jules Extension: Send Message to Jules Session` - Post follow-up instructions to an active session
 
 ## Known Issues
 

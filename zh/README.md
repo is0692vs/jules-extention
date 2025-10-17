@@ -24,6 +24,11 @@ Jules 扩展程序是一个扩展，可让您直接在 VSCode 中操作 Google �
 
 快来了...
 
+## 参考
+
+- [Jules 官方网站](https://jules.google/docs)
+- [Jules API 文档](https://developers.google.com/jules/api)
+
 ## 执照
 
 MIT

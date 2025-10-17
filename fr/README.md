@@ -24,6 +24,11 @@ Prochainement...
 
 Prochainement...
 
+## Référence
+
+- [Site officiel de Jules](https://jules.google/docs)
+- [Documentation de l'API Jules](https://developers.google.com/jules/api)
+
 ## Licence
 
 MIT

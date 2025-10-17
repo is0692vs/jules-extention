@@ -60,6 +60,10 @@
         "command": "jules-extension.refreshActivities",
         "title": "Refresh Jules Activities",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "jules-extension.sendMessage",
+        "title": "Send Message to Jules Session"
       }
     ],
     "views": {
@@ -78,6 +82,13 @@
           "command": "jules-extension.refreshSessions",
           "when": "view == julesSessionsView",
           "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "jules-extension.sendMessage",
+          "when": "view == julesSessionsView && viewItem == jules-session",
+          "group": "inline"
         }
       ]
     }
