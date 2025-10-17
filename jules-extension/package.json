@@ -33,7 +33,8 @@
       },
       {
         "command": "jules-extension.setApiKey",
-        "title": "Set Jules API Key"
+        "title": "Set Jules API Key",
+        "icon": "$(key)"
       },
       {
         "command": "jules-extension.verifyApiKey",
@@ -41,11 +42,13 @@
       },
       {
         "command": "jules-extension.listSources",
-        "title": "List Jules Sources"
+        "title": "List Jules Sources",
+        "icon": "$(repo)"
       },
       {
         "command": "jules-extension.createSession",
-        "title": "Create Jules Session"
+        "title": "Create Jules Session",
+        "icon": "$(add)"
       },
       {
         "command": "jules-extension.refreshSessions",
@@ -79,9 +82,24 @@
     "menus": {
       "view/title": [
         {
+          "command": "jules-extension.setApiKey",
+          "when": "view == julesSessionsView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "jules-extension.listSources",
+          "when": "view == julesSessionsView",
+          "group": "navigation@2"
+        },
+        {
+          "command": "jules-extension.createSession",
+          "when": "view == julesSessionsView",
+          "group": "navigation@3"
+        },
+        {
           "command": "jules-extension.refreshSessions",
           "when": "view == julesSessionsView",
-          "group": "navigation"
+          "group": "navigation@4"
         }
       ],
       "view/item/context": [
