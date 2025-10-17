@@ -43,8 +43,26 @@ _(これは UI のイメージです。実際の表示とは異なる場合が�
 
 ## 📦 インストール
 
+### Marketplace から (推奨)
+
 1.  VSCode Marketplace で "Jules Extension" を検索 (現在準備中)
 2.  `Install` ボタンをクリック
+
+### VSIX ファイルから (手動インストール)
+
+まだ Marketplace に公開されていない最新の機能を試したい場合は、リリースページから `.vsix` ファイルを直接ダウンロードしてインストールできます。
+
+1.  **リリースページにアクセス:**
+    [GitHub Releases](https://github.com/your-repo/jules-extension/releases) を開き、最新のリリースバージョンを見つけます。
+
+2.  **VSIX ファイルをダウンロード:**
+    `Assets` の中にある `.vsix` ファイル (例: `jules-extension-0.1.0.vsix`) をダウンロードします。
+
+3.  **VSCode にインストール:**
+    - VSCode を開きます。
+    - `拡張機能` (Extensions) ビュー (`Ctrl+Shift+X`) を表示します。
+    - ビューの上部にある `...` (その他のアクション) メニューをクリックし、`VSIX からのインストール...` (Install from VSIX...) を選択します。
+    - ダウンロードした `.vsix` ファイルを選択してインストールします。
 
 ## クイックスタート
 
