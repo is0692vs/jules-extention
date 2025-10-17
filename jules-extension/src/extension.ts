@@ -133,6 +133,7 @@ interface Activity {
   createTime: string;
   originator: "user" | "agent";
   id: string;
+  type?: string;
   planGenerated?: { plan: any };
   planApproved?: { planId: string };
   progressUpdated?: { title: string; description?: string };
@@ -260,6 +261,56 @@ export class SessionTreeItem extends vscode.TreeItem {
       default:
         return new vscode.ThemeIcon("question");
     }
+  }
+}
+
+async function approvePlan(
+  sessionId: string,
+  context: vscode.ExtensionContext
+): Promise<void> {
+  const apiKey = await context.secrets.get("jules-api-key");
+  if (!apiKey) {
+    vscode.window.showErrorMessage(
+      "API Key is not set. Please set it first."
+    );
+    return;
+  }
+
+  try {
+    await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: "Approving plan...",
+      },
+      async () => {
+        const response = await fetch(
+          `https://jules.googleapis.com/v1alpha/${sessionId}:approvePlan`,
+          {
+            method: "POST",
+            headers: {
+              "X-Goog-Api-Key": apiKey,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({}),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to approve plan: ${response.status} ${response.statusText}`
+          );
+        }
+
+        vscode.window.showInformationMessage("Plan approved successfully!");
+
+        // リフレッシュして最新状態を取得
+        await vscode.commands.executeCommand("jules-extension.refreshSessions");
+      }
+    );
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unknown error occurred.";
+    vscode.window.showErrorMessage(`Error approving plan: ${message}`);
   }
 }
 
@@ -645,6 +696,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (data.activities.length === 0) {
           activitiesChannel.appendLine("No activities found for this session.");
         } else {
+          let planDetected = false;
           data.activities.forEach((activity) => {
             const icon = getActivityIcon(activity);
             const timestamp = new Date(activity.createTime).toLocaleString();
@@ -653,6 +705,7 @@ export function activate(context: vscode.ExtensionContext) {
               message = `Plan generated: ${
                 activity.planGenerated.plan?.title || "Plan"
               }`;
+              planDetected = true;
             } else if (activity.planApproved) {
               message = `Plan approved: ${activity.planApproved.planId}`;
             } else if (activity.progressUpdated) {
@@ -670,6 +723,24 @@ export function activate(context: vscode.ExtensionContext) {
               `${icon} ${timestamp} (${activity.originator}): ${message}`
             );
           });
+
+          // planGeneratedを検出した場合、承認を促す通知を表示
+          if (planDetected) {
+            vscode.window
+              .showInformationMessage(
+                "Plan generated for session. Would you like to approve it?",
+                "Approve Plan",
+                "View Details",
+                "Dismiss"
+              )
+              .then((selection) => {
+                if (selection === "Approve Plan") {
+                  approvePlan(sessionId, context);
+                } else if (selection === "View Details") {
+                  activitiesChannel.show();
+                }
+              });
+          }
         }
         await context.globalState.update("currentSessionId", sessionId);
         await context.globalState.update("active-session-id", sessionId);
@@ -707,6 +778,20 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  const approvePlanDisposable = vscode.commands.registerCommand(
+    "jules-extension.approvePlan",
+    async () => {
+      const sessionId = context.globalState.get<string>("active-session-id");
+      if (!sessionId) {
+        vscode.window.showErrorMessage(
+          "No active session. Please select a session first."
+        );
+        return;
+      }
+      await approvePlan(sessionId, context);
+    }
+  );
+
   context.subscriptions.push(
     disposable,
     setApiKeyDisposable,
@@ -717,7 +802,8 @@ export function activate(context: vscode.ExtensionContext) {
     refreshSessionsDisposable,
     showActivitiesDisposable,
     refreshActivitiesDisposable,
-    sendMessageDisposable
+    sendMessageDisposable,
+    approvePlanDisposable
   );
 }
 

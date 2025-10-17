@@ -64,6 +64,11 @@
       {
         "command": "jules-extension.sendMessage",
         "title": "Send Message to Jules Session"
+      },
+      {
+        "command": "jules-extension.approvePlan",
+        "title": "Approve Jules Plan",
+        "category": "Jules"
       }
     ],
     "views": {
