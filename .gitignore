@@ -72,6 +72,5 @@ out/
 *.tgz
 *.local
 
-
 .gemini/
 gha-creds-*.json
