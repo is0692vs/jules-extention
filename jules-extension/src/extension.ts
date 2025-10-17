@@ -275,19 +275,11 @@ async function sendMessageToSession(
     return;
   }
 
-  let sessionId: string | undefined;
-  if (typeof target === "string" && target) {
-    sessionId = target;
-  } else if (target instanceof SessionTreeItem) {
-    sessionId = target.session.name;
-  }
-
-  if (!sessionId) {
-    sessionId =
-      context.globalState.get<string>("active-session-id") ||
-      context.globalState.get<string>("currentSessionId") ||
-      undefined;
-  }
+  let sessionId =
+    (typeof target === "string" ? target : undefined) ??
+    (target instanceof SessionTreeItem ? target.session.name : undefined) ??
+    context.globalState.get<string>("active-session-id") ??
+    context.globalState.get<string>("currentSessionId");
 
   if (!sessionId) {
     vscode.window.showErrorMessage(
@@ -342,6 +334,7 @@ async function sendMessageToSession(
     );
 
     await context.globalState.update("active-session-id", sessionId);
+    // currentSessionId is a legacy key maintained for backward compatibility
     await context.globalState.update("currentSessionId", sessionId);
     await vscode.commands.executeCommand("jules-extension.refreshActivities");
   } catch (error) {

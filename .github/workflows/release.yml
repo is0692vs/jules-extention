@@ -92,15 +92,14 @@ jobs:
               per_page: 100
             });
 
-            for (const asset of assets) {
-              if (asset.name === vsixFile) {
-                core.info(`Deleting existing asset ${asset.name} (id: ${asset.id})`);
-                await github.rest.repos.deleteReleaseAsset({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  asset_id: asset.id
-                });
-              }
+            const existingAsset = assets.find(asset => asset.name === vsixFile);
+            if (existingAsset) {
+              core.info(`Deleting existing asset ${existingAsset.name} (id: ${existingAsset.id})`);
+              await github.rest.repos.deleteReleaseAsset({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                asset_id: existingAsset.id
+              });
             }
 
             await github.rest.repos.uploadReleaseAsset({
