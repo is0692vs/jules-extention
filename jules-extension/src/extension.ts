@@ -34,11 +34,94 @@ interface SessionResponse {
   // Add other fields if needed
 }
 
+interface SessionOutput {
+  pullRequest?: {
+    url: string;
+    title: string;
+    description: string;
+  };
+}
+
 interface Session {
   name: string;
   title: string;
   state: "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED";
+  outputs?: SessionOutput[];
   // Add other fields if needed
+}
+
+function mapApiStateToSessionState(
+  apiState: string
+): "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED" {
+  switch (apiState) {
+    case "PLANNING":
+    case "AWAITING_PLAN_APPROVAL":
+    case "AWAITING_USER_FEEDBACK":
+    case "IN_PROGRESS":
+    case "QUEUED":
+    case "STATE_UNSPECIFIED":
+      return "RUNNING";
+    case "COMPLETED":
+      return "COMPLETED";
+    case "FAILED":
+      return "FAILED";
+    case "PAUSED":
+    case "CANCELLED":
+      return "CANCELLED";
+    default:
+      return "RUNNING"; // default to RUNNING
+  }
+}
+
+interface SessionState {
+  name: string;
+  state: string;
+  outputs?: SessionOutput[];
+}
+
+let previousSessionStates: Map<string, SessionState> = new Map();
+
+function extractPRUrl(session: Session): string | null {
+  return session.outputs?.find((o) => o.pullRequest)?.pullRequest?.url || null;
+}
+
+function extractPRUrlFromState(state: SessionState): string | null {
+  return state.outputs?.find((o) => o.pullRequest)?.pullRequest?.url || null;
+}
+
+function checkForCompletedSessions(currentSessions: Session[]): Session[] {
+  const completedSessions: Session[] = [];
+  for (const session of currentSessions) {
+    if (session.state === "COMPLETED") {
+      const prevState = previousSessionStates.get(session.name);
+      const currentPr = extractPRUrl(session);
+      const prevPr = prevState ? extractPRUrlFromState(prevState) : null;
+      if (currentPr && (!prevPr || prevState?.state === "RUNNING")) {
+        completedSessions.push(session);
+      }
+    }
+  }
+  return completedSessions;
+}
+
+async function notifyPRCreated(session: Session, prUrl: string): Promise<void> {
+  const result = await vscode.window.showInformationMessage(
+    `Session "${session.title}" has completed and created a PR!`,
+    "Open PR"
+  );
+  if (result === "Open PR") {
+    vscode.env.openExternal(vscode.Uri.parse(prUrl));
+  }
+}
+
+function updatePreviousStates(currentSessions: Session[]): void {
+  for (const session of currentSessions) {
+    previousSessionStates.set(session.name, {
+      name: session.name,
+      state: session.state,
+      outputs: session.outputs,
+    });
+  }
 }
 
 interface SessionsResponse {
@@ -89,7 +172,16 @@ class JulesSessionsProvider
 
   constructor(private context: vscode.ExtensionContext) {}
 
-  refresh(): void {
+  async refresh(): Promise<void> {
+    const sessions = (await this.fetchSessions()).map((item) => item.session);
+    const completedSessions = checkForCompletedSessions(sessions);
+    for (const session of completedSessions) {
+      const prUrl = extractPRUrl(session);
+      if (prUrl) {
+        await notifyPRCreated(session, prUrl);
+      }
+    }
+    updatePreviousStates(sessions);
     this._onDidChangeTreeData.fire();
   }
 
@@ -128,7 +220,13 @@ class JulesSessionsProvider
       if (!data.sessions || !Array.isArray(data.sessions)) {
         return [];
       }
-      return data.sessions.map((session) => new SessionTreeItem(session));
+      return data.sessions.map((session) => {
+        const mappedSession = {
+          ...session,
+          state: mapApiStateToSessionState(session.state),
+        };
+        return new SessionTreeItem(mappedSession);
+      });
     } catch (error) {
       return [];
     }
@@ -170,7 +268,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Use the console to output diagnostic information (console.log) and errors (console.error)
   // This line of code will only be executed once when your extension is activated
   console.log(
-    'Congratulations, your extension "jules-extention" is now active!'
+    'Congratulations, your extension "jules-extension" is now active!'
   );
 
   // Create OutputChannel for Activities
@@ -182,16 +280,16 @@ export function activate(context: vscode.ExtensionContext) {
   // Now provide the implementation of the command with registerCommand
   // The commandId parameter must match the command field in package.json
   const disposable = vscode.commands.registerCommand(
-    "jules-extention.helloWorld",
+    "jules-extension.helloWorld",
     () => {
       // The code you place here will be executed every time your command is executed
       // Display a message box to the user
-      vscode.window.showInformationMessage("Hello World from jules-extention!");
+      vscode.window.showInformationMessage("Hello World from jules-extension!");
     }
   );
 
   const setApiKeyDisposable = vscode.commands.registerCommand(
-    "jules-extention.setApiKey",
+    "jules-extension.setApiKey",
     async () => {
       const apiKey = await vscode.window.showInputBox({
         prompt: "Enter your Jules API Key",
@@ -205,7 +303,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   const verifyApiKeyDisposable = vscode.commands.registerCommand(
-    "jules-extention.verifyApiKey",
+    "jules-extension.verifyApiKey",
     async () => {
       const apiKey = await context.secrets.get("jules-api-key");
       if (!apiKey) {
@@ -241,7 +339,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   const listSourcesDisposable = vscode.commands.registerCommand(
-    "jules-extention.listSources",
+    "jules-extension.listSources",
     async () => {
       const apiKey = await context.secrets.get("jules-api-key");
       if (!apiKey) {
@@ -297,7 +395,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   const createSessionDisposable = vscode.commands.registerCommand(
-    "jules-extention.createSession",
+    "jules-extension.createSession",
     async () => {
       const selectedSource = context.globalState.get(
         "selectedSource"
@@ -401,7 +499,7 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   const refreshSessionsDisposable = vscode.commands.registerCommand(
-    "jules-extention.refreshSessions",
+    "jules-extension.refreshSessions",
     () => {
       sessionsProvider.refresh();
     }

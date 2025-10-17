@@ -1,6 +1,6 @@
 {
-  "name": "jules-extention",
-  "displayName": "jules-extention",
+  "name": "jules-extension",
+  "displayName": "jules-extension",
   "description": "",
   "version": "0.0.1",
   "engines": {
@@ -15,7 +15,7 @@
     "configuration": {
       "title": "Jules Extension",
       "properties": {
-        "jules-extention.apiKey": {
+        "jules-extension.apiKey": {
           "type": "string",
           "default": "",
           "description": "API Key for Jules API"
@@ -24,27 +24,27 @@
     },
     "commands": [
       {
-        "command": "jules-extention.helloWorld",
+        "command": "jules-extension.helloWorld",
         "title": "Hello World"
       },
       {
-        "command": "jules-extention.setApiKey",
+        "command": "jules-extension.setApiKey",
         "title": "Set Jules API Key"
       },
       {
-        "command": "jules-extention.verifyApiKey",
+        "command": "jules-extension.verifyApiKey",
         "title": "Verify Jules API Key"
       },
       {
-        "command": "jules-extention.listSources",
+        "command": "jules-extension.listSources",
         "title": "List Jules Sources"
       },
       {
-        "command": "jules-extention.createSession",
+        "command": "jules-extension.createSession",
         "title": "Create Jules Session"
       },
       {
-        "command": "jules-extention.refreshSessions",
+        "command": "jules-extension.refreshSessions",
         "title": "Refresh Jules Sessions",
         "icon": "$(refresh)"
       },
@@ -71,7 +71,7 @@
     "menus": {
       "view/title": [
         {
-          "command": "jules-extention.refreshSessions",
+          "command": "jules-extension.refreshSessions",
           "when": "view == julesSessionsView",
           "group": "navigation"
         }
