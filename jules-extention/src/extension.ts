@@ -34,6 +34,99 @@ interface SessionResponse {
   // Add other fields if needed
 }
 
+interface Session {
+  name: string;
+  title: string;
+  state: "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED";
+  // Add other fields if needed
+}
+
+interface SessionsResponse {
+  sessions: Session[];
+}
+
+class JulesSessionsProvider
+  implements vscode.TreeDataProvider<SessionTreeItem>
+{
+  private _onDidChangeTreeData: vscode.EventEmitter<
+    SessionTreeItem | undefined | null | void
+  > = new vscode.EventEmitter<SessionTreeItem | undefined | null | void>();
+  readonly onDidChangeTreeData: vscode.Event<
+    SessionTreeItem | undefined | null | void
+  > = this._onDidChangeTreeData.event;
+
+  constructor(private context: vscode.ExtensionContext) {}
+
+  refresh(): void {
+    this._onDidChangeTreeData.fire();
+  }
+
+  getTreeItem(element: SessionTreeItem): vscode.TreeItem {
+    return element;
+  }
+
+  getChildren(element?: SessionTreeItem): Thenable<SessionTreeItem[]> {
+    if (element) {
+      return Promise.resolve([]);
+    } else {
+      return this.fetchSessions();
+    }
+  }
+
+  private async fetchSessions(): Promise<SessionTreeItem[]> {
+    const apiKey = await this.context.secrets.get("jules-api-key");
+    if (!apiKey) {
+      return [];
+    }
+    try {
+      const response = await fetch(
+        "https://jules.googleapis.com/v1alpha/sessions",
+        {
+          method: "GET",
+          headers: {
+            "X-Goog-Api-Key": apiKey,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!response.ok) {
+        return [];
+      }
+      const data = (await response.json()) as SessionsResponse;
+      if (!data.sessions || !Array.isArray(data.sessions)) {
+        return [];
+      }
+      return data.sessions.map((session) => new SessionTreeItem(session));
+    } catch (error) {
+      return [];
+    }
+  }
+}
+
+class SessionTreeItem extends vscode.TreeItem {
+  constructor(public readonly session: Session) {
+    super(session.title || session.name, vscode.TreeItemCollapsibleState.None);
+    this.tooltip = `${session.name} - ${session.state}`;
+    this.description = session.state;
+    this.iconPath = this.getIcon(session.state);
+  }
+
+  private getIcon(state: string): vscode.ThemeIcon {
+    switch (state) {
+      case "RUNNING":
+        return new vscode.ThemeIcon("sync~spin");
+      case "COMPLETED":
+        return new vscode.ThemeIcon("check");
+      case "FAILED":
+        return new vscode.ThemeIcon("error");
+      case "CANCELLED":
+        return new vscode.ThemeIcon("close");
+      default:
+        return new vscode.ThemeIcon("question");
+    }
+  }
+}
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -260,12 +353,26 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  const sessionsProvider = new JulesSessionsProvider(context);
+  const sessionsTreeView = vscode.window.createTreeView("julesSessionsView", {
+    treeDataProvider: sessionsProvider,
+  });
+
+  const refreshSessionsDisposable = vscode.commands.registerCommand(
+    "jules-extention.refreshSessions",
+    () => {
+      sessionsProvider.refresh();
+    }
+  );
+
   context.subscriptions.push(
     disposable,
     setApiKeyDisposable,
     verifyApiKeyDisposable,
     listSourcesDisposable,
-    createSessionDisposable
+    createSessionDisposable,
+    sessionsTreeView,
+    refreshSessionsDisposable
   );
 }
 
