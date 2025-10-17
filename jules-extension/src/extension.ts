@@ -268,7 +268,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Use the console to output diagnostic information (console.log) and errors (console.error)
   // This line of code will only be executed once when your extension is activated
   console.log(
-    'Congratulations, your extension "jules-extention" is now active!'
+    'Congratulations, your extension "jules-extension" is now active!'
   );
 
   // Create OutputChannel for Activities
@@ -280,16 +280,16 @@ export function activate(context: vscode.ExtensionContext) {
   // Now provide the implementation of the command with registerCommand
   // The commandId parameter must match the command field in package.json
   const disposable = vscode.commands.registerCommand(
-    "jules-extention.helloWorld",
+    "jules-extension.helloWorld",
     () => {
       // The code you place here will be executed every time your command is executed
       // Display a message box to the user
-      vscode.window.showInformationMessage("Hello World from jules-extention!");
+      vscode.window.showInformationMessage("Hello World from jules-extension!");
     }
   );
 
   const setApiKeyDisposable = vscode.commands.registerCommand(
-    "jules-extention.setApiKey",
+    "jules-extension.setApiKey",
     async () => {
       const apiKey = await vscode.window.showInputBox({
         prompt: "Enter your Jules API Key",
@@ -303,7 +303,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   const verifyApiKeyDisposable = vscode.commands.registerCommand(
-    "jules-extention.verifyApiKey",
+    "jules-extension.verifyApiKey",
     async () => {
       const apiKey = await context.secrets.get("jules-api-key");
       if (!apiKey) {
@@ -339,7 +339,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   const listSourcesDisposable = vscode.commands.registerCommand(
-    "jules-extention.listSources",
+    "jules-extension.listSources",
     async () => {
       const apiKey = await context.secrets.get("jules-api-key");
       if (!apiKey) {
@@ -395,7 +395,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   const createSessionDisposable = vscode.commands.registerCommand(
-    "jules-extention.createSession",
+    "jules-extension.createSession",
     async () => {
       const selectedSource = context.globalState.get(
         "selectedSource"
@@ -499,7 +499,7 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   const refreshSessionsDisposable = vscode.commands.registerCommand(
-    "jules-extention.refreshSessions",
+    "jules-extension.refreshSessions",
     () => {
       sessionsProvider.refresh();
     }
