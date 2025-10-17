@@ -17,6 +17,23 @@ interface SourceQuickPickItem extends vscode.QuickPickItem {
   source: Source;
 }
 
+interface CreateSessionRequest {
+  prompt: string;
+  sourceContext: {
+    source: string;
+    githubRepoContext?: {
+      startingBranch: string;
+    };
+  };
+  automationMode: "AUTO_CREATE_PR" | "MANUAL";
+  title: string;
+}
+
+interface SessionResponse {
+  name: string;
+  // Add other fields if needed
+}
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -144,11 +161,111 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  const createSessionDisposable = vscode.commands.registerCommand(
+    "jules-extention.createSession",
+    async () => {
+      const selectedSource = context.globalState.get(
+        "selectedSource"
+      ) as Source;
+      if (!selectedSource) {
+        vscode.window.showErrorMessage(
+          "No source selected. Please list and select a source first."
+        );
+        return;
+      }
+      const apiKey = await context.secrets.get("jules-api-key");
+      if (!apiKey) {
+        vscode.window.showErrorMessage(
+          'API Key not found. Please set it first using "Set Jules API Key" command.'
+        );
+        return;
+      }
+      const prompt = await vscode.window.showInputBox({
+        prompt: "Enter your task description for Jules",
+        placeHolder: "e.g., Fix the login bug in authentication.ts",
+      });
+      if (!prompt) {
+        return;
+      }
+      const title = await vscode.window.showInputBox({
+        prompt: "Enter a title for the session",
+        placeHolder: "e.g., Fix Login Bug",
+        value: prompt.split(".")[0],
+      });
+      if (!title) {
+        return;
+      }
+      const createPR = await vscode.window.showQuickPick(["Yes", "No"], {
+        placeHolder: "Create PR automatically?",
+      });
+      if (createPR === undefined) {
+        return;
+      }
+      const automationMode = createPR === "Yes" ? "AUTO_CREATE_PR" : "MANUAL";
+      const requestBody: CreateSessionRequest = {
+        prompt,
+        sourceContext: {
+          source: selectedSource.name || selectedSource.id || "",
+          githubRepoContext: {
+            startingBranch: "main",
+          },
+        },
+        automationMode,
+        title,
+      };
+      try {
+        await vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: "Creating Jules Session...",
+            cancellable: false,
+          },
+          async (progress) => {
+            progress.report({ increment: 0, message: "Sending request..." });
+            const response = await fetch(
+              "https://jules.googleapis.com/v1alpha/sessions",
+              {
+                method: "POST",
+                headers: {
+                  "X-Goog-Api-Key": apiKey,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestBody),
+              }
+            );
+            progress.report({
+              increment: 50,
+              message: "Processing response...",
+            });
+            if (!response.ok) {
+              throw new Error(
+                `Failed to create session: ${response.status} ${response.statusText}`
+              );
+            }
+            const session = (await response.json()) as SessionResponse;
+            await context.globalState.update("active-session-id", session.name);
+            progress.report({ increment: 100, message: "Session created!" });
+            vscode.window.showInformationMessage(
+              `Session created: ${session.name}`
+            );
+          }
+        );
+      } catch (error) {
+        vscode.window.showErrorMessage(
+          `Failed to create session: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
+      }
+    }
+  );
+
   context.subscriptions.push(
     disposable,
     setApiKeyDisposable,
     verifyApiKeyDisposable,
-    listSourcesDisposable
+    listSourcesDisposable,
+    createSessionDisposable
   );
 }
 

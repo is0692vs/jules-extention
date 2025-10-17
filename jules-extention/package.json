@@ -38,6 +38,10 @@
       {
         "command": "jules-extention.listSources",
         "title": "List Jules Sources"
+      },
+      {
+        "command": "jules-extention.createSession",
+        "title": "Create Jules Session"
       }
     ]
   },
