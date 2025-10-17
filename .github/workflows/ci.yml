@@ -23,12 +23,12 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-        cache-dependency-path: jules-extention/package-lock.json
+        cache-dependency-path: jules-extension/package-lock.json
 
     - name: Install dependencies
-      working-directory: ./jules-extention
+      working-directory: ./jules-extension
       run: npm ci
 
     - name: Run tests
-      working-directory: ./jules-extention
+      working-directory: ./jules-extension
       run: xvfb-run -a npm test
