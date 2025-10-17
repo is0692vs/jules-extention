@@ -80,6 +80,9 @@ interface SessionState {
 }
 
 let previousSessionStates: Map<string, SessionState> = new Map();
+let autoRefreshInterval: NodeJS.Timeout | undefined;
+
+// Helper functions
 
 function extractPRUrl(session: Session): string | null {
   return session.outputs?.find((o) => o.pullRequest)?.pullRequest?.url || null;
@@ -122,6 +125,44 @@ function updatePreviousStates(currentSessions: Session[]): void {
       outputs: session.outputs,
     });
   }
+}
+
+function startAutoRefresh(
+  context: vscode.ExtensionContext,
+  sessionsProvider: JulesSessionsProvider
+): void {
+  const config = vscode.workspace.getConfiguration(
+    "julius-extension.autoRefresh"
+  );
+  const isEnabled = config.get<boolean>("enabled");
+  const interval = config.get<number>("interval", 30000);
+
+  if (!isEnabled) {
+    return;
+  }
+
+  if (autoRefreshInterval) {
+    clearInterval(autoRefreshInterval);
+  }
+
+  autoRefreshInterval = setInterval(() => {
+    sessionsProvider.refresh();
+  }, interval);
+}
+
+function stopAutoRefresh(): void {
+  if (autoRefreshInterval) {
+    clearInterval(autoRefreshInterval);
+    autoRefreshInterval = undefined;
+  }
+}
+
+function resetAutoRefresh(
+  context: vscode.ExtensionContext,
+  sessionsProvider: JulesSessionsProvider
+): void {
+  stopAutoRefresh();
+  startAutoRefresh(context, sessionsProvider);
 }
 
 interface SessionsResponse {
@@ -666,9 +707,30 @@ export function activate(context: vscode.ExtensionContext) {
     treeDataProvider: sessionsProvider,
   });
 
+  startAutoRefresh(context, sessionsProvider);
+
+  const onDidChangeConfiguration = vscode.workspace.onDidChangeConfiguration(
+    (event) => {
+      if (
+        event.affectsConfiguration("julius-extension.autoRefresh.enabled") ||
+        event.affectsConfiguration("julius-extension.autoRefresh.interval")
+      ) {
+        stopAutoRefresh();
+        const autoRefreshEnabled = vscode.workspace
+          .getConfiguration("julius-extension.autoRefresh")
+          .get<boolean>("enabled");
+        if (autoRefreshEnabled) {
+          startAutoRefresh(context, sessionsProvider);
+        }
+      }
+    }
+  );
+  context.subscriptions.push(onDidChangeConfiguration);
+
   const refreshSessionsDisposable = vscode.commands.registerCommand(
     "jules-extension.refreshSessions",
     () => {
+      resetAutoRefresh(context, sessionsProvider);
       sessionsProvider.refresh();
     }
   );
@@ -857,4 +919,6 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() {
+  stopAutoRefresh();
+}
