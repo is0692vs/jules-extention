@@ -115,7 +115,7 @@ export function activate(context: vscode.ExtensionContext) {
           );
           return;
         }
-        const data = await response.json() as SourcesResponse;
+        const data = (await response.json()) as SourcesResponse;
         if (!data.sources || !Array.isArray(data.sources)) {
           vscode.window.showErrorMessage("Invalid response format from API.");
           return;
@@ -126,9 +126,10 @@ export function activate(context: vscode.ExtensionContext) {
           detail: source.description || "",
           source: source,
         }));
-        const selected: SourceQuickPickItem | undefined = await vscode.window.showQuickPick(items, {
-          placeHolder: "Select a Jules Source",
-        });
+        const selected: SourceQuickPickItem | undefined =
+          await vscode.window.showQuickPick(items, {
+            placeHolder: "Select a Jules Source",
+          });
         if (selected) {
           await context.globalState.update("selectedSource", selected.source);
           vscode.window.showInformationMessage(
