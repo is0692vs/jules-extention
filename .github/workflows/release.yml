@@ -1,83 +1,83 @@
 name: Release
 
 on:
-    push:
-        tags:
-            - "v*"
+  push:
+    tags:
+      - "v*"
 
 jobs:
-    release:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v4
-              with:
-                  node-version: "20.x"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
 
-            - run: npm ci
-              working-directory: ./jules-extension
+      - run: npm ci
+        working-directory: ./jules-extension
 
-            - run: npm run compile
-              working-directory: ./jules-extension
+      - run: npm run compile
+        working-directory: ./jules-extension
 
-            - name: Install xvfb
-              run: sudo apt-get install -y xvfb
+      - name: Install xvfb
+        run: sudo apt-get install -y xvfb
 
-            - run: xvfb-run -a npm test
-              working-directory: ./jules-extension
+      - run: xvfb-run -a npm test
+        working-directory: ./jules-extension
 
-            - name: Install vsce
-              run: npm install -g @vscode/vsce
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
 
-            - name: Package extension
-              run: vsce package
-              working-directory: ./jules-extension
+      - name: Package extension
+        run: vsce package
+        working-directory: ./jules-extension
 
-            - name: Create Release
-              uses: actions/github-script@v7
-              with:
-                  script: |
-                    const fs = require('fs');
-                    const path = require('path');
-                    
-                    // Find VSIX file
-                    const vsixDir = './jules-extension';
-                    const files = fs.readdirSync(vsixDir);
-                    const vsixFile = files.find(f => f.endsWith('.vsix'));
-                    
-                    if (!vsixFile) {
-                      throw new Error('VSIX file not found');
-                    }
-                    
-                    const vsixPath = path.join(vsixDir, vsixFile);
-                    const vsixData = fs.readFileSync(vsixPath);
-                    
-                    // Create release
-                    const tagName = context.ref.replace('refs/tags/', '');
-                    const release = await github.rest.repos.createRelease({
-                      owner: context.repo.owner,
-                      repo: context.repo.repo,
-                      tag_name: tagName,
-                      name: `Release ${tagName}`,
-                      draft: false,
-                      prerelease: false
-                    });
-                    
-                    // Upload VSIX
-                    await github.rest.repos.uploadReleaseAsset({
-                      owner: context.repo.owner,
-                      repo: context.repo.repo,
-                      release_id: release.data.id,
-                      name: vsixFile,
-                      data: vsixData,
-                      headers: {
-                        'content-type': 'application/octet-stream',
-                        'content-length': vsixData.length
-                      }
-                    });
-                    
-                    console.log(`Release created: ${release.data.html_url}`);
-                    console.log(`VSIX uploaded: ${vsixFile}`);
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            // Find VSIX file
+            const vsixDir = './jules-extension';
+            const files = fs.readdirSync(vsixDir);
+            const vsixFile = files.find(f => f.endsWith('.vsix'));
+
+            if (!vsixFile) {
+              throw new Error('VSIX file not found');
+            }
+
+            const vsixPath = path.join(vsixDir, vsixFile);
+            const vsixData = fs.readFileSync(vsixPath);
+
+            // Create release
+            const tagName = context.ref.replace('refs/tags/', '');
+            const release = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tagName,
+              name: `Release ${tagName}`,
+              draft: false,
+              prerelease: false
+            });
+
+            // Upload VSIX
+            await github.rest.repos.uploadReleaseAsset({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: release.data.id,
+              name: vsixFile,
+              data: vsixData,
+              headers: {
+                'content-type': 'application/octet-stream',
+                'content-length': vsixData.length
+              }
+            });
+
+            console.log(`Release created: ${release.data.html_url}`);
+            console.log(`VSIX uploaded: ${vsixFile}`);
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
