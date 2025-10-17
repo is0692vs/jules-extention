@@ -221,7 +221,44 @@ class JulesSessionsProvider
       if (!data.sessions || !Array.isArray(data.sessions)) {
         return [];
       }
-      return data.sessions.map((session) => {
+
+      // 各セッションのアクティビティをチェックして完了状態を検知
+      const sessionsWithCheckedState = await Promise.all(
+        data.sessions.map(async (session) => {
+          try {
+            const activitiesResponse = await fetch(
+              `https://jules.googleapis.com/v1alpha/${session.name}/activities`,
+              {
+                method: "GET",
+                headers: {
+                  "X-Goog-Api-Key": apiKey,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+            if (activitiesResponse.ok) {
+              const activitiesData =
+                (await activitiesResponse.json()) as ActivitiesResponse;
+              const hasSessionCompleted = activitiesData.activities?.some(
+                (activity) => activity.sessionCompleted
+              );
+              if (hasSessionCompleted && session.state !== "COMPLETED") {
+                // APIのstateがCOMPLETEDでないが、アクティビティにsessionCompletedがある場合
+                return { ...session, state: "COMPLETED" as const };
+              }
+            }
+          } catch (error) {
+            // アクティビティ取得失敗時は元のstateを使用
+            console.warn(
+              `Failed to check activities for session ${session.name}:`,
+              error
+            );
+          }
+          return session;
+        })
+      );
+
+      return sessionsWithCheckedState.map((session) => {
         const mappedSession = {
           ...session,
           state: mapApiStateToSessionState(session.state),
@@ -270,9 +307,7 @@ async function approvePlan(
 ): Promise<void> {
   const apiKey = await context.secrets.get("jules-api-key");
   if (!apiKey) {
-    vscode.window.showErrorMessage(
-      "API Key is not set. Please set it first."
-    );
+    vscode.window.showErrorMessage("API Key is not set. Please set it first.");
     return;
   }
 
@@ -726,9 +761,23 @@ export function activate(context: vscode.ExtensionContext) {
 
           // planGeneratedを検出した場合、承認を促す通知を表示
           if (planDetected) {
+            // 最初のユーザーメッセージを取得
+            const firstUserActivity = data.activities
+              .filter((activity) => activity.originator === "user")
+              .sort(
+                (a, b) =>
+                  new Date(a.createTime).getTime() -
+                  new Date(b.createTime).getTime()
+              )[0];
+            const firstMessage = firstUserActivity
+              ? firstUserActivity.progressUpdated?.title ||
+                firstUserActivity.progressUpdated?.description ||
+                "Initial request"
+              : "Initial request";
+
             vscode.window
               .showInformationMessage(
-                "Plan generated for session. Would you like to approve it?",
+                `Plan generated for session "${session.title}". Initial request: "${firstMessage}". Would you like to approve it?`,
                 "Approve Plan",
                 "View Details",
                 "Dismiss"
