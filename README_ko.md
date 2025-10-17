@@ -24,6 +24,11 @@ Jules Extension은 Google의 AI 코딩 에이전트 Jules를 VSCode 내에서 �
 
 준비 중...
 
+## 참조
+
+- [Jules 공식 웹사이트](https://jules.google/docs)
+- [Jules API 문서](https://developers.google.com/jules/api)
+
 ## 라이선스
 
 MIT
