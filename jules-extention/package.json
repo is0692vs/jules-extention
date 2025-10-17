@@ -42,8 +42,32 @@
       {
         "command": "jules-extention.createSession",
         "title": "Create Jules Session"
+      },
+      {
+        "command": "jules-extention.refreshSessions",
+        "title": "Refresh Jules Sessions",
+        "icon": "$(refresh)"
       }
-    ]
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "julesSessionsView",
+          "name": "Jules Sessions",
+          "icon": "$(robot)",
+          "contextualTitle": "Jules Sessions"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "jules-extention.refreshSessions",
+          "when": "view == julesSessionsView",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
