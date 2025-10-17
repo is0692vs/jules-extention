@@ -48,13 +48,16 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
       try {
-        const response = await fetch("https://jules.googleapis.com/v1alpha/sources", {
-          method: "GET",
-          headers: {
-            "X-Goog-Api-Key": apiKey,
-            "Content-Type": "application/json"
-          },
-        });
+        const response = await fetch(
+          "https://jules.googleapis.com/v1alpha/sources",
+          {
+            method: "GET",
+            headers: {
+              "X-Goog-Api-Key": apiKey,
+              "Content-Type": "application/json",
+            },
+          }
+        );
         if (response.ok) {
           vscode.window.showInformationMessage("API Key is valid.");
         } else {
