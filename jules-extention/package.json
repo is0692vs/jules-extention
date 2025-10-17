@@ -47,6 +47,15 @@
         "command": "jules-extention.refreshSessions",
         "title": "Refresh Jules Sessions",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "jules-extension.showActivities",
+        "title": "Show Jules Activities"
+      },
+      {
+        "command": "jules-extension.refreshActivities",
+        "title": "Refresh Jules Activities",
+        "icon": "$(refresh)"
       }
     ],
     "views": {

@@ -45,6 +45,38 @@ interface SessionsResponse {
   sessions: Session[];
 }
 
+interface Activity {
+  name: string;
+  createTime: string;
+  originator: "user" | "agent";
+  id: string;
+  planGenerated?: { plan: any };
+  planApproved?: { planId: string };
+  progressUpdated?: { title: string; description?: string };
+  sessionCompleted?: {};
+  // Other fields as needed
+}
+
+interface ActivitiesResponse {
+  activities: Activity[];
+}
+
+function getActivityIcon(activity: Activity): string {
+  if (activity.planGenerated) {
+    return "📝";
+  }
+  if (activity.planApproved) {
+    return "👍";
+  }
+  if (activity.progressUpdated) {
+    return "🔄";
+  }
+  if (activity.sessionCompleted) {
+    return "✅";
+  }
+  return "ℹ️";
+}
+
 class JulesSessionsProvider
   implements vscode.TreeDataProvider<SessionTreeItem>
 {
@@ -109,6 +141,11 @@ class SessionTreeItem extends vscode.TreeItem {
     this.tooltip = `${session.name} - ${session.state}`;
     this.description = session.state;
     this.iconPath = this.getIcon(session.state);
+    this.command = {
+      command: "jules-extension.showActivities",
+      title: "Show Activities",
+      arguments: [session.name],
+    };
   }
 
   private getIcon(state: string): vscode.ThemeIcon {
@@ -135,6 +172,11 @@ export function activate(context: vscode.ExtensionContext) {
   console.log(
     'Congratulations, your extension "jules-extention" is now active!'
   );
+
+  // Create OutputChannel for Activities
+  const activitiesChannel =
+    vscode.window.createOutputChannel("Jules Activities");
+  context.subscriptions.push(activitiesChannel);
 
   // The command has been defined in the package.json file
   // Now provide the implementation of the command with registerCommand
@@ -365,6 +407,118 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  const showActivitiesDisposable = vscode.commands.registerCommand(
+    "jules-extension.showActivities",
+    async (sessionId: string) => {
+      const apiKey = await context.secrets.get("jules-api-key");
+      if (!apiKey) {
+        vscode.window.showErrorMessage(
+          'API Key not found. Please set it first using "Set Jules API Key" command.'
+        );
+        return;
+      }
+      try {
+        const sessionResponse = await fetch(
+          `https://jules.googleapis.com/v1alpha/${sessionId}`,
+          {
+            method: "GET",
+            headers: {
+              "X-Goog-Api-Key": apiKey,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (!sessionResponse.ok) {
+          const errorText = await sessionResponse.text();
+          vscode.window.showErrorMessage(
+            `Session not found: ${sessionResponse.status} ${sessionResponse.statusText} - ${errorText}`
+          );
+          return;
+        }
+        const session = (await sessionResponse.json()) as Session;
+        const response = await fetch(
+          `https://jules.googleapis.com/v1alpha/${sessionId}/activities`,
+          {
+            method: "GET",
+            headers: {
+              "X-Goog-Api-Key": apiKey,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (!response.ok) {
+          const errorText = await response.text();
+          vscode.window.showErrorMessage(
+            `Failed to fetch activities: ${response.status} ${response.statusText} - ${errorText}`
+          );
+          return;
+        }
+        const data = (await response.json()) as ActivitiesResponse;
+        if (!data.activities || !Array.isArray(data.activities)) {
+          vscode.window.showErrorMessage("Invalid response format from API.");
+          return;
+        }
+        activitiesChannel.clear();
+        activitiesChannel.show();
+        activitiesChannel.appendLine(`Activities for session: ${sessionId}`);
+        activitiesChannel.appendLine("---");
+        if (data.activities.length === 0) {
+          activitiesChannel.appendLine("No activities found for this session.");
+        } else {
+          data.activities.forEach((activity) => {
+            const icon = getActivityIcon(activity);
+            const timestamp = new Date(activity.createTime).toLocaleString();
+            let message = "";
+            if (activity.planGenerated) {
+              message = `Plan generated: ${
+                activity.planGenerated.plan?.title || "Plan"
+              }`;
+            } else if (activity.planApproved) {
+              message = `Plan approved: ${activity.planApproved.planId}`;
+            } else if (activity.progressUpdated) {
+              message = `Progress: ${activity.progressUpdated.title}${
+                activity.progressUpdated.description
+                  ? " - " + activity.progressUpdated.description
+                  : ""
+              }`;
+            } else if (activity.sessionCompleted) {
+              message = "Session completed";
+            } else {
+              message = "Unknown activity";
+            }
+            activitiesChannel.appendLine(
+              `${icon} ${timestamp} (${activity.originator}): ${message}`
+            );
+          });
+        }
+        await context.globalState.update("currentSessionId", sessionId);
+      } catch (error) {
+        vscode.window.showErrorMessage(
+          "Failed to fetch activities. Please check your internet connection."
+        );
+      }
+    }
+  );
+
+  const refreshActivitiesDisposable = vscode.commands.registerCommand(
+    "jules-extension.refreshActivities",
+    async () => {
+      const currentSessionId = context.globalState.get(
+        "currentSessionId"
+      ) as string;
+      if (!currentSessionId) {
+        vscode.window.showErrorMessage(
+          "No current session selected. Please show activities first."
+        );
+        return;
+      }
+      await vscode.commands.executeCommand(
+        "jules-extension.showActivities",
+        currentSessionId
+      );
+    }
+  );
+
   context.subscriptions.push(
     disposable,
     setApiKeyDisposable,
@@ -372,7 +526,9 @@ export function activate(context: vscode.ExtensionContext) {
     listSourcesDisposable,
     createSessionDisposable,
     sessionsTreeView,
-    refreshSessionsDisposable
+    refreshSessionsDisposable,
+    showActivitiesDisposable,
+    refreshActivitiesDisposable
   );
 }
 
