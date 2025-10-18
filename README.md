@@ -33,17 +33,6 @@ Jules Extension は、Google の AI コーディングエージェント **Jules
 | **進捗の更新**         | Jules の作業がどこまで進んだか気になったら、`↻`（更新）ボタンをクリック。セッションのステータスや Jules が実行した最新のアクティビティリストを瞬時に取得し、表示を更新します。                    | `jules-extension.refreshSessions` |
 | **アクティビティ表示** | セッションを選択すると、Jules が実行したコマンド、編集したファイル、思考プロセスなどの詳細なログを確認できます。まるで Jules の思考を覗き込んでいるかのような、透明性の高い開発体験を提供します。 | `jules-extension.showActivities`  |
 
-### プレビュー: Jules Sessions View
-
-```markdown
-┌──────────────────────────────┐
-│ ▼ JULES SESSIONS ↻ │
-├──────────────────────────────┤
-│ ▶ session-xyz-123 (Running) │
-│ ▶ session-abc-456 (Active) │
-│ ⏹ session-def-789 (Done) │
-└──────────────────────────────┘
-
 ## 📦 インストール
 
 1. [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=HirokiMukai.jules-extension) から拡張機能をインストールしてください。
@@ -70,4 +59,7 @@ Issue Tracker や Pull Requests をご確認ください。
 ## 📝 ライセンス
 
 [MIT](LICENSE)
+
+```
+
 ```
