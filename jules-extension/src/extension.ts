@@ -212,18 +212,22 @@ class JulesSessionsProvider
     SessionTreeItem | undefined | null | void
   > = this._onDidChangeTreeData.event;
 
+  private sessions: SessionTreeItem[] = [];
+
   constructor(private context: vscode.ExtensionContext) {}
 
   async refresh(): Promise<void> {
-    const sessions = (await this.fetchSessions()).map((item) => item.session);
-    const completedSessions = checkForCompletedSessions(sessions);
+    this.sessions = await this.fetchSessions();
+    const sessionsData = this.sessions.map((item) => item.session);
+
+    const completedSessions = checkForCompletedSessions(sessionsData);
     for (const session of completedSessions) {
       const prUrl = extractPRUrl(session);
       if (prUrl) {
         await notifyPRCreated(session, prUrl);
       }
     }
-    updatePreviousStates(sessions);
+    updatePreviousStates(sessionsData);
     this._onDidChangeTreeData.fire();
   }
 
@@ -234,9 +238,13 @@ class JulesSessionsProvider
   getChildren(element?: SessionTreeItem): Thenable<SessionTreeItem[]> {
     if (element) {
       return Promise.resolve([]);
-    } else {
-      return this.fetchSessions();
     }
+    // If the cache is empty, it might be the first load.
+    if (this.sessions.length === 0) {
+      // This ensures the view is populated on first load.
+      return this.refresh().then(() => this.sessions);
+    }
+    return Promise.resolve(this.sessions);
   }
 
   private async fetchSessions(): Promise<SessionTreeItem[]> {
