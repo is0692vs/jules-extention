@@ -84,6 +84,31 @@ let autoRefreshInterval: NodeJS.Timeout | undefined;
 
 // Helper functions
 
+async function getStoredApiKey(
+  context: vscode.ExtensionContext
+): Promise<string | undefined> {
+  const apiKey = await context.secrets.get("jules-api-key");
+  if (!apiKey) {
+    vscode.window.showErrorMessage(
+      'API Key not found. Please set it first using "Set Jules API Key" command.'
+    );
+    return undefined;
+  }
+  return apiKey;
+}
+
+function resolveSessionId(
+  context: vscode.ExtensionContext,
+  target?: SessionTreeItem | string
+): string | undefined {
+  return (
+    (typeof target === "string" ? target : undefined) ??
+    (target instanceof SessionTreeItem ? target.session.name : undefined) ??
+    context.globalState.get<string>("active-session-id") ??
+    context.globalState.get<string>("currentSessionId")
+  );
+}
+
 function extractPRUrl(session: Session): string | null {
   return session.outputs?.find((o) => o.pullRequest)?.pullRequest?.url || null;
 }
@@ -163,6 +188,181 @@ function resetAutoRefresh(
 ): void {
   stopAutoRefresh();
   startAutoRefresh(context, sessionsProvider);
+}
+
+interface ComposerOptions {
+  title: string;
+  placeholder?: string;
+  value?: string;
+}
+
+async function showMessageComposer(
+  options: ComposerOptions
+): Promise<string | undefined> {
+  const panel = vscode.window.createWebviewPanel(
+    "julesMessageComposer",
+    options.title,
+    vscode.ViewColumn.Active,
+    {
+      enableScripts: true,
+      retainContextWhenHidden: false,
+    }
+  );
+
+  const nonce = getNonce();
+  panel.webview.html = getComposerHtml(panel.webview, options, nonce);
+
+  return new Promise((resolve) => {
+    let resolved = false;
+
+    const finalize = (value: string | undefined) => {
+      if (resolved) {
+        return;
+      }
+      resolved = true;
+      resolve(value);
+    };
+
+    panel.onDidDispose(() => finalize(undefined));
+
+    panel.webview.onDidReceiveMessage((message) => {
+      if (message?.type === "submit") {
+        finalize(typeof message.value === "string" ? message.value : undefined);
+        panel.dispose();
+      } else if (message?.type === "cancel") {
+        finalize(undefined);
+        panel.dispose();
+      }
+    });
+  });
+}
+
+function getComposerHtml(
+  webview: vscode.Webview,
+  options: ComposerOptions,
+  nonce: string
+): string {
+  const placeholder = escapeAttribute(options.placeholder ?? "");
+  const value = escapeHtml(options.value ?? "");
+  const title = escapeHtml(options.title);
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource}; script-src 'nonce-${nonce}'; style-src ${webview.cspSource} 'unsafe-inline';" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>${title}</title>
+<style>
+  body {
+    margin: 0;
+    padding: 16px;
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    font-family: var(--vscode-font-family);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    box-sizing: border-box;
+  }
+
+  textarea {
+    flex: 1;
+    width: 100%;
+    resize: vertical;
+    font-family: var(--vscode-editor-font-family);
+    font-size: var(--vscode-editor-font-size);
+    color: var(--vscode-input-foreground);
+    background: var(--vscode-input-background);
+    border: 1px solid var(--vscode-input-border);
+    border-radius: 4px;
+    padding: 12px;
+    box-sizing: border-box;
+    line-height: 1.5;
+  }
+
+  textarea:focus {
+    outline: 1px solid var(--vscode-focusBorder);
+  }
+
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  button {
+    padding: 6px 14px;
+    border-radius: 4px;
+    border: 1px solid var(--vscode-button-border, transparent);
+    background: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    cursor: pointer;
+  }
+
+  button.primary {
+    background: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+  }
+
+  button.primary:hover {
+    background: var(--vscode-button-hoverBackground);
+  }
+</style>
+</head>
+<body>
+  <textarea id="message" placeholder="${placeholder}" autofocus>${value}</textarea>
+  <div class="actions">
+    <button type="button" id="cancel">Cancel</button>
+    <button type="button" id="submit" class="primary">Send</button>
+  </div>
+  <script nonce="${nonce}">
+    const vscode = acquireVsCodeApi();
+    const textarea = document.getElementById('message');
+    const submit = () => {
+      vscode.postMessage({ type: 'submit', value: textarea.value });
+    };
+
+    document.getElementById('submit').addEventListener('click', submit);
+    document.getElementById('cancel').addEventListener('click', () => {
+      vscode.postMessage({ type: 'cancel' });
+    });
+
+    textarea.addEventListener('keydown', (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+        event.preventDefault();
+        submit();
+      }
+    });
+  </script>
+</body>
+</html>`;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function escapeAttribute(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function getNonce(): string {
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < 16; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
 }
 
 interface SessionsResponse {
@@ -394,20 +594,12 @@ async function sendMessageToSession(
   context: vscode.ExtensionContext,
   target?: SessionTreeItem | string
 ): Promise<void> {
-  const apiKey = await context.secrets.get("jules-api-key");
+  const apiKey = await getStoredApiKey(context);
   if (!apiKey) {
-    vscode.window.showErrorMessage(
-      'API Key not set. Please configure it using "Set Jules API Key" first.'
-    );
     return;
   }
 
-  let sessionId =
-    (typeof target === "string" ? target : undefined) ??
-    (target instanceof SessionTreeItem ? target.session.name : undefined) ??
-    context.globalState.get<string>("active-session-id") ??
-    context.globalState.get<string>("currentSessionId");
-
+  const sessionId = resolveSessionId(context, target);
   if (!sessionId) {
     vscode.window.showErrorMessage(
       "No active session available. Please create or select a session first."
@@ -415,17 +607,18 @@ async function sendMessageToSession(
     return;
   }
 
-  const prompt = await vscode.window.showInputBox({
-    prompt: "Enter your message to Jules",
-    placeHolder: "e.g., Can you add unit tests?",
+  const prompt = await showMessageComposer({
+    title: "Send Message to Jules",
+    placeholder: "e.g., Can you add unit tests?",
   });
 
   if (prompt === undefined) {
     return;
   }
 
-  const trimmedPrompt = prompt.trim();
-  if (!trimmedPrompt) {
+  const normalizedPrompt = prompt.replace(/\r\n/g, "\n");
+
+  if (!normalizedPrompt.trim()) {
     vscode.window.showWarningMessage("Message was empty and not sent.");
     return;
   }
@@ -445,7 +638,7 @@ async function sendMessageToSession(
               "Content-Type": "application/json",
               "X-Goog-Api-Key": apiKey,
             },
-            body: JSON.stringify({ prompt: trimmedPrompt }),
+            body: JSON.stringify({ prompt: normalizedPrompt }),
           }
         );
 
@@ -514,11 +707,8 @@ export function activate(context: vscode.ExtensionContext) {
   const verifyApiKeyDisposable = vscode.commands.registerCommand(
     "jules-extension.verifyApiKey",
     async () => {
-      const apiKey = await context.secrets.get("jules-api-key");
+      const apiKey = await getStoredApiKey(context);
       if (!apiKey) {
-        vscode.window.showErrorMessage(
-          'API Key not found. Please set it first using "Set Jules API Key" command.'
-        );
         return;
       }
       try {
@@ -550,11 +740,8 @@ export function activate(context: vscode.ExtensionContext) {
   const listSourcesDisposable = vscode.commands.registerCommand(
     "jules-extension.listSources",
     async () => {
-      const apiKey = await context.secrets.get("jules-api-key");
+      const apiKey = await getStoredApiKey(context);
       if (!apiKey) {
-        vscode.window.showErrorMessage(
-          'API Key not found. Please set it first using "Set Jules API Key" command.'
-        );
         return;
       }
       try {
@@ -745,11 +932,8 @@ export function activate(context: vscode.ExtensionContext) {
   const showActivitiesDisposable = vscode.commands.registerCommand(
     "jules-extension.showActivities",
     async (sessionId: string) => {
-      const apiKey = await context.secrets.get("jules-api-key");
+      const apiKey = await getStoredApiKey(context);
       if (!apiKey) {
-        vscode.window.showErrorMessage(
-          'API Key not found. Please set it first using "Set Jules API Key" command.'
-        );
         return;
       }
       try {
