@@ -743,7 +743,6 @@ export function activate(context: vscode.ExtensionContext) {
           location: { viewId: "julesSessionsView" },
         },
         () => {
-          resetAutoRefresh(context, sessionsProvider);
           return sessionsProvider.refresh();
         }
       );
