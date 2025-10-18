@@ -434,6 +434,16 @@ async function sendMessageToSession(
 
     // 3. Handle the result
     if (selection === "Send Message") {
+      // Check if the document is still open before accessing its content
+      const isDocumentOpen = vscode.workspace.textDocuments.some(
+        (openDoc) => openDoc.uri.toString() === editor.document.uri.toString()
+      );
+      if (!isDocumentOpen) {
+        vscode.window.showWarningMessage(
+          "The message editor was closed before sending. Message was not sent."
+        );
+        return;
+      }
       const prompt = editor.document.getText();
 
       // Close the editor showing the temporary document, even if it's not active
