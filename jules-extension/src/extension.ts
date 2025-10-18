@@ -730,8 +730,15 @@ export function activate(context: vscode.ExtensionContext) {
   const refreshSessionsDisposable = vscode.commands.registerCommand(
     "jules-extension.refreshSessions",
     () => {
-      resetAutoRefresh(context, sessionsProvider);
-      sessionsProvider.refresh();
+      vscode.window.withProgress(
+        {
+          location: { viewId: "julesSessionsView" },
+        },
+        () => {
+          resetAutoRefresh(context, sessionsProvider);
+          return sessionsProvider.refresh();
+        }
+      );
     }
   );
 
