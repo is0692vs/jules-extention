@@ -453,9 +453,11 @@ class JulesSessionsProvider
   private async fetchSessions(): Promise<SessionTreeItem[]> {
     const apiKey = await this.context.secrets.get("jules-api-key");
     if (!apiKey) {
+      console.log("Jules: No API key found");
       return [];
     }
     try {
+      console.log("Jules: Fetching sessions...");
       const response = await fetch(
         "https://jules.googleapis.com/v1alpha/sessions",
         {
@@ -467,50 +469,21 @@ class JulesSessionsProvider
         }
       );
       if (!response.ok) {
+        console.error(
+          `Jules: Failed to fetch sessions: ${response.status} ${response.statusText}`
+        );
         return [];
       }
       const data = (await response.json()) as SessionsResponse;
       if (!data.sessions || !Array.isArray(data.sessions)) {
+        console.log("Jules: No sessions found or invalid response format");
         return [];
       }
 
-      // 各セッションのアクティビティをチェックして完了状態を検知
-      const sessionsWithCheckedState = await Promise.all(
-        data.sessions.map(async (session) => {
-          try {
-            const activitiesResponse = await fetch(
-              `https://jules.googleapis.com/v1alpha/${session.name}/activities`,
-              {
-                method: "GET",
-                headers: {
-                  "X-Goog-Api-Key": apiKey,
-                  "Content-Type": "application/json",
-                },
-              }
-            );
-            if (activitiesResponse.ok) {
-              const activitiesData =
-                (await activitiesResponse.json()) as ActivitiesResponse;
-              const hasSessionCompleted = activitiesData.activities?.some(
-                (activity) => activity.sessionCompleted
-              );
-              if (hasSessionCompleted && session.state !== "COMPLETED") {
-                // APIのstateがCOMPLETEDでないが、アクティビティにsessionCompletedがある場合
-                return { ...session, state: "COMPLETED" as const };
-              }
-            }
-          } catch (error) {
-            // アクティビティ取得失敗時は元のstateを使用
-            console.warn(
-              `Failed to check activities for session ${session.name}:`,
-              error
-            );
-          }
-          return session;
-        })
-      );
+      console.log(`Jules: Found ${data.sessions.length} sessions`);
 
-      return sessionsWithCheckedState.map((session) => {
+      // セッションを直接マッピング（アクティビティチェックは後で必要に応じて実装）
+      return data.sessions.map((session) => {
         const mappedSession = {
           ...session,
           state: mapApiStateToSessionState(session.state),
@@ -518,6 +491,7 @@ class JulesSessionsProvider
         return new SessionTreeItem(mappedSession);
       });
     } catch (error) {
+      console.error("Jules: Error fetching sessions:", error);
       return [];
     }
   }
