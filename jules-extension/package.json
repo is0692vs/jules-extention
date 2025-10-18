@@ -40,10 +40,6 @@
     },
     "commands": [
       {
-        "command": "jules-extension.helloWorld",
-        "title": "Hello World"
-      },
-      {
         "command": "jules-extension.setApiKey",
         "title": "Set Jules API Key",
         "icon": "$(key)"
@@ -83,7 +79,8 @@
       {
         "command": "jules-extension.approvePlan",
         "title": "Approve Jules Plan",
-        "category": "Jules"
+        "category": "Jules",
+        "icon": "$(check)"
       }
     ],
     "views": {
