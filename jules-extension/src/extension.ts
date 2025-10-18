@@ -47,6 +47,9 @@ interface Session {
   title: string;
   state: "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED";
   outputs?: SessionOutput[];
+  sourceContext?: {
+    source: string;
+  };
   // Add other fields if needed
 }
 
@@ -444,74 +447,53 @@ function getActivityIcon(activity: Activity): string {
 }
 
 class JulesSessionsProvider
-  implements vscode.TreeDataProvider<SessionTreeItem>
+  implements vscode.TreeDataProvider<vscode.TreeItem>
 {
   private _onDidChangeTreeData: vscode.EventEmitter<
-    SessionTreeItem | undefined | null | void
-  > = new vscode.EventEmitter<SessionTreeItem | undefined | null | void>();
+    vscode.TreeItem | undefined | null | void
+  > = new vscode.EventEmitter<vscode.TreeItem | undefined | null | void>();
   readonly onDidChangeTreeData: vscode.Event<
-    SessionTreeItem | undefined | null | void
+    vscode.TreeItem | undefined | null | void
   > = this._onDidChangeTreeData.event;
-
-  private sessions: SessionTreeItem[] = [];
 
   constructor(private context: vscode.ExtensionContext) {}
 
-  async refresh(): Promise<void> {
-    console.log("Jules: refresh() called");
-    try {
-      this.sessions = await this.fetchSessions();
-      console.log(`Jules: refresh() fetched ${this.sessions.length} sessions`);
-      const sessionsData = this.sessions.map((item) => item.session);
-
-      const completedSessions = checkForCompletedSessions(sessionsData);
-      console.log(
-        `Jules: Found ${completedSessions.length} completed sessions`
-      );
-      updatePreviousStates(sessionsData);
-      for (const session of completedSessions) {
-        const prUrl = extractPRUrl(session);
-        if (prUrl) {
-          notifyPRCreated(session, prUrl).catch((error) => {
-            console.error("Jules: Failed to show PR notification", error);
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Jules: Error in refresh():", error);
-    } finally {
-      console.log("Jules: Firing onDidChangeTreeData event");
-      this._onDidChangeTreeData.fire();
-    }
+  refresh(): void {
+    console.log("Jules: refresh() called, firing event.");
+    this._onDidChangeTreeData.fire();
   }
 
-  getTreeItem(element: SessionTreeItem): vscode.TreeItem {
+  getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
     return element;
   }
 
-  async getChildren(element?: SessionTreeItem): Promise<SessionTreeItem[]> {
-    console.log(
-      `Jules: getChildren called, element=${
-        element ? "provided" : "none"
-      }, sessions count=${this.sessions.length}`
-    );
+  async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
     if (element) {
       return [];
     }
-    console.log(
-      `Jules: Returning ${this.sessions.length} sessions to tree view`
-    );
-    return this.sessions;
-  }
 
-  private async fetchSessions(): Promise<SessionTreeItem[]> {
-    const apiKey = await this.context.secrets.get("jules-api-key");
+    const selectedSource =
+      this.context.globalState.get<Source>("selected-source");
+
+    if (!selectedSource) {
+      const item = new vscode.TreeItem(
+        "ℹ️ No source selected. Click to select a source."
+      );
+      item.command = {
+        command: "jules-extension.listSources",
+        title: "Select Source",
+      };
+      item.contextValue = "no-source";
+      return [item];
+    }
+
+    const apiKey = await getStoredApiKey(this.context);
     if (!apiKey) {
-      console.log("Jules: No API key found");
       return [];
     }
+
     try {
-      console.log("Jules: Fetching sessions...");
+      console.log("Jules: Fetching sessions in getChildren...");
       const response = await fetch(
         "https://jules.googleapis.com/v1alpha/sessions",
         {
@@ -522,36 +504,60 @@ class JulesSessionsProvider
           },
         }
       );
+
       if (!response.ok) {
-        console.error(
-          `Jules: Failed to fetch sessions: ${response.status} ${response.statusText}`
-        );
+        const errorMsg = `Failed to fetch sessions: ${response.status} ${response.statusText}`;
+        console.error(`Jules: ${errorMsg}`);
+        vscode.window.showErrorMessage(errorMsg);
         return [];
       }
+
       const data = (await response.json()) as SessionsResponse;
       if (!data.sessions || !Array.isArray(data.sessions)) {
         console.log("Jules: No sessions found or invalid response format");
-        return [];
+        return [new vscode.TreeItem("No sessions found for this source.")];
       }
 
-      console.log(`Jules: Found ${data.sessions.length} sessions`);
+      console.log(`Jules: Found ${data.sessions.length} total sessions`);
 
-      // セッションを直接マッピング（アクティビティチェックは後で必要に応じて実装）
-      const items = data.sessions.map((session) => {
-        const mappedSession = {
-          ...session,
-          state: mapApiStateToSessionState(session.state),
-        };
-        const item = new SessionTreeItem(mappedSession);
+      const allSessionsMapped = data.sessions.map((session) => ({
+        ...session,
+        state: mapApiStateToSessionState(session.state),
+      }));
+
+      const completedSessions = checkForCompletedSessions(allSessionsMapped);
+      if (completedSessions.length > 0) {
         console.log(
-          `Jules: Created tree item: ${item.label} (${item.description})`
+          `Jules: Found ${completedSessions.length} completed sessions`
         );
-        return item;
-      });
-      console.log(`Jules: Returning ${items.length} tree items`);
-      return items;
+        updatePreviousStates(allSessionsMapped);
+        for (const session of completedSessions) {
+          const prUrl = extractPRUrl(session);
+          if (prUrl) {
+            notifyPRCreated(session, prUrl).catch((error) => {
+              console.error("Jules: Failed to show PR notification", error);
+            });
+          }
+        }
+      }
+
+      const filteredSessions = allSessionsMapped.filter(
+        (session) =>
+          (session as any).sourceContext?.source === selectedSource.name
+      );
+      console.log(
+        `Jules: Found ${filteredSessions.length} sessions for the selected source`
+      );
+
+      if (filteredSessions.length === 0) {
+        return [new vscode.TreeItem("No sessions found for this source.")];
+      }
+
+      return filteredSessions.map((session) => new SessionTreeItem(session));
     } catch (error) {
-      console.error("Jules: Error fetching sessions:", error);
+      const errorMsg = `Failed to fetch sessions: ${error}`;
+      console.error("Jules: Error fetching sessions in getChildren:", error);
+      vscode.window.showErrorMessage(errorMsg);
       return [];
     }
   }
@@ -708,6 +714,27 @@ async function sendMessageToSession(
   }
 }
 
+function updateStatusBar(
+  context: vscode.ExtensionContext,
+  statusBarItem: vscode.StatusBarItem
+) {
+  const selectedSource = context.globalState.get<Source>("selected-source");
+
+  if (selectedSource) {
+    // GitHubリポジトリ名を抽出（例: "sources/github/owner/repo" -> "owner/repo"）
+    const repoMatch = selectedSource.name?.match(/sources\/github\/(.+)/);
+    const repoName = repoMatch ? repoMatch[1] : selectedSource.name;
+
+    statusBarItem.text = `$(repo) Jules: ${repoName}`;
+    statusBarItem.tooltip = `Current Source: ${repoName}\nClick to change source`;
+    statusBarItem.show();
+  } else {
+    statusBarItem.text = `$(repo) Jules: No source selected`;
+    statusBarItem.tooltip = "Click to select a source";
+    statusBarItem.show();
+  }
+}
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -716,6 +743,24 @@ export function activate(context: vscode.ExtensionContext) {
   console.log(
     'Congratulations, your extension "jules-extension" is now active!'
   );
+
+  const sessionsProvider = new JulesSessionsProvider(context);
+  const sessionsTreeView = vscode.window.createTreeView("julesSessionsView", {
+    treeDataProvider: sessionsProvider,
+    showCollapseAll: false,
+  });
+  console.log("Jules: TreeView created");
+
+  // ステータスバーアイテム作成
+  const statusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Left,
+    100
+  );
+  statusBarItem.command = "jules-extension.listSources";
+  context.subscriptions.push(statusBarItem);
+
+  // 初期表示を更新
+  updateStatusBar(context, statusBarItem);
 
   // Create OutputChannel for Activities
   const activitiesChannel =
@@ -809,10 +854,12 @@ export function activate(context: vscode.ExtensionContext) {
             placeHolder: "Select a Jules Source",
           });
         if (selected) {
-          await context.globalState.update("selectedSource", selected.source);
+          await context.globalState.update("selected-source", selected.source);
           vscode.window.showInformationMessage(
             `Selected source: ${selected.label}`
           );
+          updateStatusBar(context, statusBarItem);
+          sessionsProvider.refresh();
         }
       } catch (error) {
         vscode.window.showErrorMessage(
@@ -826,7 +873,7 @@ export function activate(context: vscode.ExtensionContext) {
     "jules-extension.createSession",
     async () => {
       const selectedSource = context.globalState.get(
-        "selectedSource"
+        "selected-source"
       ) as Source;
       if (!selectedSource) {
         vscode.window.showErrorMessage(
@@ -928,23 +975,9 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  const sessionsProvider = new JulesSessionsProvider(context);
-  const sessionsTreeView = vscode.window.createTreeView("julesSessionsView", {
-    treeDataProvider: sessionsProvider,
-    showCollapseAll: false,
-  });
-  console.log("Jules: TreeView created");
-
   // Perform initial refresh to populate the tree view (async, don't wait)
   console.log("Jules: Starting initial refresh...");
-  sessionsProvider
-    .refresh()
-    .then(() => {
-      console.log("Jules: Initial refresh completed");
-    })
-    .catch((error) => {
-      console.error("Jules: Initial refresh failed:", error);
-    });
+  sessionsProvider.refresh();
 
   startAutoRefresh(context, sessionsProvider);
 
@@ -969,14 +1002,7 @@ export function activate(context: vscode.ExtensionContext) {
   const refreshSessionsDisposable = vscode.commands.registerCommand(
     "jules-extension.refreshSessions",
     () => {
-      vscode.window.withProgress(
-        {
-          location: { viewId: "julesSessionsView" },
-        },
-        () => {
-          return sessionsProvider.refresh();
-        }
-      );
+      sessionsProvider.refresh();
     }
   );
 
