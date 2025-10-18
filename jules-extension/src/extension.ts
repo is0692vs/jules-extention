@@ -690,18 +690,6 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.createOutputChannel("Jules Activities");
   context.subscriptions.push(activitiesChannel);
 
-  // The command has been defined in the package.json file
-  // Now provide the implementation of the command with registerCommand
-  // The commandId parameter must match the command field in package.json
-  const disposable = vscode.commands.registerCommand(
-    "jules-extension.helloWorld",
-    () => {
-      // The code you place here will be executed every time your command is executed
-      // Display a message box to the user
-      vscode.window.showInformationMessage("Hello World from jules-extension!");
-    }
-  );
-
   const setApiKeyDisposable = vscode.commands.registerCommand(
     "jules-extension.setApiKey",
     async () => {
@@ -1138,7 +1126,6 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    disposable,
     setApiKeyDisposable,
     verifyApiKeyDisposable,
     listSourcesDisposable,
