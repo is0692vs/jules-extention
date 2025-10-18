@@ -489,7 +489,7 @@ async function sendMessageToSession(
           "workbench.action.closeActiveEditor"
         );
       }
-      vscode.window.showWarningMessage("Message was cancelled and not sent.");
+      vscode.window.showWarningMessage("Message was canceled and not sent.");
     }
   } catch (error) {
     const message =
