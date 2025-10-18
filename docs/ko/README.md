@@ -1,5 +1,7 @@
 # VSCode용 Jules 확장 프로그램
 
+![Jules Extension Icon](../jules-extension/icon.png)
+
 [![VSCode Extension](https://img.shields.io/badge/VSCode-Extension-blue.svg)](https://marketplace.visualstudio.com/items?itemName=YOUR_PUBLISHER.jules-extension)
 [![Status](https://img.shields.io/badge/status-development-yellow.svg)](#)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
