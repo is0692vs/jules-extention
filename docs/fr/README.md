@@ -19,13 +19,13 @@ Cette extension a été créée pour faire passer votre expérience de développ
 
 ## 🚀 Fonctionnalités Clés
 
-| Fonctionnalité         | Description                                                                          | Commande / Icône                  |
-| :--------------------- | :----------------------------------------------------------------------------------- | :-------------------------------- |
-| **Définir la Clé API** | Définissez et validez en toute sécurité la clé API pour utiliser l'API Jules.        | `jules-extension.setApiKey`       |
-| **Gestion des Sessions**| Démarrez de nouvelles sessions de codage et gérez-les dans une liste.                | `jules-extension.createSession`   |
-| **Surveillance en Temps Réel**| Suivez l'état des sessions actives en temps réel dans une vue dédiée avec l'icône `$(robot)`. | `julesSessionsView`               |
-| **Mise à Jour de la Progression**| Obtenez les dernières informations sur les sessions et les activités avec un seul bouton `$(refresh)`. | `jules-extension.refreshSessions` |
-| **Affichage de l'Activité**| Consultez les journaux de tâches détaillés exécutés par Jules.                     | `jules-extension.showActivities`  |
+| Fonctionnalité         | Description                                                                                                                                                                                                                            | Commande / Icône                  |
+| :--------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------- |
+| **Définir la Clé API** | Lors de la première utilisation, définissez votre clé API pour vous connecter à votre compte Jules. La clé est stockée en toute sécurité dans le SecretStorage de VSCode et utilisée automatiquement pour toutes les requêtes ultérieures. | `jules-extension.setApiKey`       |
+| **Gestion des Sessions**| Utilisez la commande `> Jules: Create Session` pour assigner une nouvelle tâche de codage à Jules. Les sessions passées sont également listées, vous permettant de reprendre le travail ou de consulter l'historique des tâches terminées à tout moment. | `jules-extension.createSession`   |
+| **Surveillance en Temps Réel**| Obtenez un aperçu de l'état de travail actuel de Jules (`Running`, `Active`, `Done`, etc.) dans une vue de la barre latérale dédiée. Plus besoin de basculer entre votre navigateur et votre éditeur.                               | `julesSessionsView`               |
+| **Mise à Jour de la Progression**| Curieux de savoir où en est Jules ? Cliquez sur le bouton `↻` (actualiser) pour récupérer et afficher instantanément le dernier état de la session et la liste des activités.                                                    | `jules-extension.refreshSessions` |
+| **Affichage de l'Activité**| Sélectionnez une session pour afficher les journaux détaillés des commandes que Jules a exécutées, les fichiers qu'il a modifiés et son processus de pensée. Cela offre une expérience de développement transparente, comme si vous regardiez dans l'esprit de Jules. | `jules-extension.showActivities`  |
 
 ### Aperçu : Vue des Sessions Jules
 
