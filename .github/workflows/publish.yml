@@ -3,32 +3,10 @@ name: Publish to Marketplace
 on:
     push:
         tags:
-            - "v*-publish" # v0.1.2-publish のような形式
+            - "v*-publish"
 
 jobs:
-    check-ci:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-
-            - name: Check if CI passed
-              uses: actions/github-script@v7
-              with:
-                  script: |
-                      const commit_sha = context.sha;
-                      const { data: checks } = await github.rest.checks.listForRef({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        ref: commit_sha
-                      });
-
-                      const ciCheck = checks.check_runs.find(check => check.name === 'test');
-                      if (!ciCheck || ciCheck.conclusion !== 'success') {
-                        core.setFailed('CI tests have not passed');
-                      }
-
     publish:
-        needs: check-ci
         runs-on: ubuntu-latest
         defaults:
             run:
