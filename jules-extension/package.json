@@ -14,7 +14,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onView:julesSessionsView"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "configuration": {
