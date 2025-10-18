@@ -200,11 +200,17 @@ interface ComposerOptions {
   title: string;
   placeholder?: string;
   value?: string;
+  showCreatePrCheckbox?: boolean;
+}
+
+interface ComposerResult {
+  prompt: string;
+  createPR: boolean;
 }
 
 async function showMessageComposer(
   options: ComposerOptions
-): Promise<string | undefined> {
+): Promise<ComposerResult | undefined> {
   const panel = vscode.window.createWebviewPanel(
     "julesMessageComposer",
     options.title,
@@ -221,7 +227,7 @@ async function showMessageComposer(
   return new Promise((resolve) => {
     let resolved = false;
 
-    const finalize = (value: string | undefined) => {
+    const finalize = (value: ComposerResult | undefined) => {
       if (resolved) {
         return;
       }
@@ -233,7 +239,11 @@ async function showMessageComposer(
 
     panel.webview.onDidReceiveMessage((message) => {
       if (message?.type === "submit") {
-        finalize(typeof message.value === "string" ? message.value : undefined);
+        finalize({
+          prompt:
+            typeof message.value === "string" ? message.value : "",
+          createPR: !!message.createPR,
+        });
         panel.dispose();
       } else if (message?.type === "cancel") {
         finalize(undefined);
@@ -251,6 +261,14 @@ function getComposerHtml(
   const placeholder = escapeAttribute(options.placeholder ?? "");
   const value = escapeHtml(options.value ?? "");
   const title = escapeHtml(options.title);
+  const createPrCheckbox = options.showCreatePrCheckbox
+    ? `
+    <div class="create-pr-container">
+      <input type="checkbox" id="create-pr" checked />
+      <label for="create-pr">Create PR automatically?</label>
+    </div>
+  `
+    : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -294,8 +312,16 @@ function getComposerHtml(
   .actions {
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
+    align-items: center;
+    gap: 16px;
     margin-top: 16px;
+  }
+
+  .create-pr-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: auto;
   }
 
   button {
@@ -320,14 +346,20 @@ function getComposerHtml(
 <body>
   <textarea id="message" placeholder="${placeholder}" autofocus>${value}</textarea>
   <div class="actions">
+    ${createPrCheckbox}
     <button type="button" id="cancel">Cancel</button>
     <button type="button" id="submit" class="primary">Send</button>
   </div>
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
     const textarea = document.getElementById('message');
+    const createPrCheckbox = document.getElementById('create-pr');
     const submit = () => {
-      vscode.postMessage({ type: 'submit', value: textarea.value });
+      vscode.postMessage({
+        type: 'submit',
+        value: textarea.value,
+        createPR: createPrCheckbox ? createPrCheckbox.checked : false,
+      });
     };
 
     document.getElementById('submit').addEventListener('click', submit);
@@ -621,17 +653,17 @@ async function sendMessageToSession(
   }
 
   try {
-    const prompt = await showMessageComposer({
+    const result = await showMessageComposer({
       title: "Send Message to Jules",
       placeholder: "What would you like Jules to do?",
     });
 
-    if (prompt === undefined) {
+    if (result === undefined) {
       vscode.window.showWarningMessage("Message was cancelled and not sent.");
       return;
     }
 
-    const trimmedPrompt = prompt.trim();
+    const trimmedPrompt = result.prompt.trim();
     if (!trimmedPrompt) {
       vscode.window.showWarningMessage("Message was empty and not sent.");
       return;
@@ -811,17 +843,18 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       try {
-        const prompt = await showMessageComposer({
+        const result = await showMessageComposer({
           title: "Create Jules Session",
           placeholder: "Describe the task you want Jules to tackle...",
+          showCreatePrCheckbox: true,
         });
 
-        if (prompt === undefined) {
+        if (result === undefined) {
           vscode.window.showWarningMessage("Session creation was cancelled.");
           return;
         }
 
-        const trimmedPrompt = prompt.trim();
+        const trimmedPrompt = result.prompt.trim();
         if (!trimmedPrompt) {
           vscode.window.showWarningMessage(
             "Task description was empty. Session not created."
@@ -829,21 +862,8 @@ export function activate(context: vscode.ExtensionContext) {
           return;
         }
 
-        const title = await vscode.window.showInputBox({
-          prompt: "Enter a title for the session",
-          placeHolder: "e.g., Fix Login Bug",
-          value: trimmedPrompt.split(".")[0],
-        });
-        if (!title) {
-          return;
-        }
-        const createPR = await vscode.window.showQuickPick(["Yes", "No"], {
-          placeHolder: "Create PR automatically?",
-        });
-        if (createPR === undefined) {
-          return;
-        }
-        const automationMode = createPR === "Yes" ? "AUTO_CREATE_PR" : "MANUAL";
+        const title = trimmedPrompt.split("\n")[0];
+        const automationMode = result.createPR ? "AUTO_CREATE_PR" : "MANUAL";
         const requestBody: CreateSessionRequest = {
           prompt: trimmedPrompt,
           sourceContext: {
