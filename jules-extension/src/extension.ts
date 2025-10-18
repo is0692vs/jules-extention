@@ -415,55 +415,82 @@ async function sendMessageToSession(
     return;
   }
 
-  const prompt = await vscode.window.showInputBox({
-    prompt: "Enter your message to Jules",
-    placeHolder: "e.g., Can you add unit tests?",
-  });
-
-  if (prompt === undefined) {
-    return;
-  }
-
-  const trimmedPrompt = prompt.trim();
-  if (!trimmedPrompt) {
-    vscode.window.showWarningMessage("Message was empty and not sent.");
-    return;
-  }
-
   try {
-    await vscode.window.withProgress(
-      {
-        location: vscode.ProgressLocation.Notification,
-        title: "Sending message to Jules...",
-      },
-      async () => {
-        const response = await fetch(
-          `https://jules.googleapis.com/v1alpha/${sessionId}:sendMessage`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Goog-Api-Key": apiKey,
-            },
-            body: JSON.stringify({ prompt: trimmedPrompt }),
-          }
-        );
+    // 1. Create and show a new document
+    const doc = await vscode.workspace.openTextDocument({
+      content: "", // Start with an empty document
+      language: "markdown",
+    });
+    const editor = await vscode.window.showTextDocument(doc, {
+      preview: false,
+    });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          const message =
-            errorText || `${response.status} ${response.statusText}`;
-          throw new Error(message);
-        }
-
-        vscode.window.showInformationMessage("Message sent successfully!");
-      }
+    // 2. Show an info message with a "Send" button
+    const selection = await vscode.window.showInformationMessage(
+      "Enter your message for Jules in the new editor tab. Click 'Send Message' when you are done.",
+      { modal: false }, // Make it non-modal so the user can edit
+      "Send Message"
     );
 
-    await context.globalState.update("active-session-id", sessionId);
-    // currentSessionId is a legacy key maintained for backward compatibility
-    await context.globalState.update("currentSessionId", sessionId);
-    await vscode.commands.executeCommand("jules-extension.refreshActivities");
+    // 3. Handle the result
+    if (selection === "Send Message") {
+      const prompt = editor.document.getText();
+
+      // Close the editor since we're done with it
+      await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+
+      const trimmedPrompt = prompt.trim();
+      if (!trimmedPrompt) {
+        vscode.window.showWarningMessage("Message was empty and not sent.");
+        return;
+      }
+
+      // 4. Send the message (the rest of the original function)
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: "Sending message to Jules...",
+        },
+        async () => {
+          const response = await fetch(
+            `https://jules.googleapis.com/v1alpha/${sessionId}:sendMessage`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Goog-Api-Key": apiKey,
+              },
+              body: JSON.stringify({ prompt: trimmedPrompt }),
+            }
+          );
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            const message =
+              errorText || `${response.status} ${response.statusText}`;
+            throw new Error(message);
+          }
+
+          vscode.window.showInformationMessage("Message sent successfully!");
+        }
+      );
+
+      await context.globalState.update("active-session-id", sessionId);
+      await context.globalState.update("currentSessionId", sessionId);
+      await vscode.commands.executeCommand("jules-extension.refreshActivities");
+    } else {
+      // User dismissed the notification without sending
+      // We should close the created editor
+      if (
+        vscode.window.activeTextEditor &&
+        vscode.window.activeTextEditor.document.uri === doc.uri
+      ) {
+        await vscode.commands.executeCommand(
+          "workbench.action.closeActiveEditor"
+        );
+      }
+      vscode.window.showWarningMessage("Message was cancelled and not sent.");
+    }
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unknown error occurred.";
