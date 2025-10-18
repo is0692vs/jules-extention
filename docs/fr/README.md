@@ -19,13 +19,13 @@ Cette extension a été créée pour faire passer votre expérience de développ
 
 ## 🚀 Fonctionnalités Clés
 
-| Fonctionnalité         | Description                                                                                                                                                                                                                            | Commande / Icône                  |
-| :--------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------- |
-| **Définir la Clé API** | Lors de la première utilisation, définissez votre clé API pour vous connecter à votre compte Jules. La clé est stockée en toute sécurité dans le SecretStorage de VSCode et utilisée automatiquement pour toutes les requêtes ultérieures. | `jules-extension.setApiKey`       |
-| **Gestion des Sessions**| Utilisez la commande `> Jules: Create Session` pour assigner une nouvelle tâche de codage à Jules. Les sessions passées sont également listées, vous permettant de reprendre le travail ou de consulter l'historique des tâches terminées à tout moment. | `jules-extension.createSession`   |
-| **Surveillance en Temps Réel**| Obtenez un aperçu de l'état de travail actuel de Jules (`Running`, `Active`, `Done`, etc.) dans une vue de la barre latérale dédiée. Plus besoin de basculer entre votre navigateur et votre éditeur.                               | `julesSessionsView`               |
-| **Mise à Jour de la Progression**| Curieux de savoir où en est Jules ? Cliquez sur le bouton `↻` (actualiser) pour récupérer et afficher instantanément le dernier état de la session et la liste des activités.                                                    | `jules-extension.refreshSessions` |
-| **Affichage de l'Activité**| Sélectionnez une session pour afficher les journaux détaillés des commandes que Jules a exécutées, les fichiers qu'il a modifiés et son processus de pensée. Cela offre une expérience de développement transparente, comme si vous regardiez dans l'esprit de Jules. | `jules-extension.showActivities`  |
+| Fonctionnalité                    | Description                                                                                                                                                                                                                                                           | Commande / Icône                  |
+| :-------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------- |
+| **Définir la Clé API**            | Lors de la première utilisation, définissez votre clé API pour vous connecter à votre compte Jules. La clé est stockée en toute sécurité dans le SecretStorage de VSCode et utilisée automatiquement pour toutes les requêtes ultérieures.                            | `jules-extension.setApiKey`       |
+| **Gestion des Sessions**          | Utilisez la commande `> Jules: Create Session` pour assigner une nouvelle tâche de codage à Jules. Les sessions passées sont également listées, vous permettant de reprendre le travail ou de consulter l'historique des tâches terminées à tout moment.              | `jules-extension.createSession`   |
+| **Surveillance en Temps Réel**    | Obtenez un aperçu de l'état de travail actuel de Jules (`Running`, `Active`, `Done`, etc.) dans une vue de la barre latérale dédiée. Plus besoin de basculer entre votre navigateur et votre éditeur.                                                                 | `julesSessionsView`               |
+| **Mise à Jour de la Progression** | Curieux de savoir où en est Jules ? Cliquez sur le bouton `↻` (actualiser) pour récupérer et afficher instantanément le dernier état de la session et la liste des activités.                                                                                         | `jules-extension.refreshSessions` |
+| **Affichage de l'Activité**       | Sélectionnez une session pour afficher les journaux détaillés des commandes que Jules a exécutées, les fichiers qu'il a modifiés et son processus de pensée. Cela offre une expérience de développement transparente, comme si vous regardiez dans l'esprit de Jules. | `jules-extension.showActivities`  |
 
 ### Aperçu : Vue des Sessions Jules
 
@@ -43,9 +43,13 @@ _(Ceci est un concept d'interface utilisateur. L'affichage réel peut différer.
 
 ## 📦 Installation
 
+Installez depuis [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=HirokiMukai.jules-extension)
+
+Ou recherchez "Jules Extension" dans la vue des extensions de VS Code.
+
 ### Depuis le Marketplace (Recommandé)
 
-1.  Recherchez "Jules Extension" sur le Marketplace de VSCode (bientôt disponible)
+1.  Recherchez "Jules Extension" sur le Marketplace de VSCode
 2.  Cliquez sur le bouton `Install`
 
 ### Depuis un Fichier VSIX (Installation Manuelle)
@@ -69,10 +73,12 @@ Si vous souhaitez essayer les dernières fonctionnalités qui ne sont pas encore
 Pour utiliser l'extension Jules, vous avez besoin d'une clé API Jules. Suivez ces étapes pour en obtenir une :
 
 1.  **Créez un Compte :**
+
     - Allez sur le [Site Officiel de Jules](https://jules.google/docs).
     - Inscrivez-vous pour un nouveau compte ou connectez-vous si vous en avez déjà un.
 
 2.  **Générez la Clé API :**
+
     - Accédez à la section "Clés API" ou "Paramètres du Développeur" dans votre tableau de bord.
     - Cliquez sur "Créer une nouvelle clé secrète".
     - Donnez un nom descriptif à votre clé (par ex., "Extension VSCode") et générez-la.
@@ -93,6 +99,12 @@ Pour utiliser l'extension Jules, vous avez besoin d'une clé API Jules. Suivez c
 ## ⚠️ Remarques Importantes
 
 - **Rendu des Blocs de Cartes :** Lorsque vous utilisez des fonctionnalités affichées sous forme de blocs de cartes, veuillez faire attention à la structure du contenu pour garantir un rendu correct.
+
+## 📚 Liens
+
+- [Marketplace](https://marketplace.visualstudio.com/items?itemName=HirokiMukai.jules-extension)
+- [GitHub Repository](https://github.com/is0692vs/jules-extension.git)
+- [Report Issues](https://github.com/is0692vs/jules-extension/issues)
 
 ## 🤝 Contribution
 
