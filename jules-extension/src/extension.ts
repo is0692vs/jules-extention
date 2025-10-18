@@ -333,6 +333,9 @@ function getComposerHtml(
       if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
         event.preventDefault();
         submit();
+      } else if (event.key === 'Escape') {
+        event.preventDefault();
+        vscode.postMessage({ type: 'cancel' });
       }
     });
   </script>
