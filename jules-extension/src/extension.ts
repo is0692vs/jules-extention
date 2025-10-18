@@ -436,8 +436,14 @@ async function sendMessageToSession(
     if (selection === "Send Message") {
       const prompt = editor.document.getText();
 
-      // Close the editor since we're done with it
-      await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+      // Close the editor showing the temporary document, even if it's not active
+      const targetEditor = vscode.window.visibleTextEditors.find(
+        (e) => e.document.uri.toString() === doc.uri.toString()
+      );
+      if (targetEditor) {
+        await vscode.window.showTextDocument(targetEditor.document, { preview: false });
+        await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+      }
 
       const trimmedPrompt = prompt.trim();
       if (!trimmedPrompt) {
