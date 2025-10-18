@@ -48,22 +48,6 @@ _（这是一个 UI 概念。实际显示可能会有所不同。）_
 1.  在 VSCode Marketplace 中搜索“Jules Extension”（即将推出）
 2.  点击 `Install` 按钮
 
-### 从 VSIX 文件 (手动安装)
-
-如果您想尝试尚未在 Marketplace 上发布的最新功能，您可以直接从发布页面下载并安装 `.vsix` 文件。
-
-1.  **前往发布页面：**
-    访问 [GitHub Releases](https://github.com/your-repo/jules-extension/releases) 并找到最新的发布版本。
-
-2.  **下载 VSIX 文件：**
-    从 `Assets` 中下载 `.vsix` 文件（例如 `jules-extension-0.1.0.vsix`）。
-
-3.  **在 VSCode 中安装：**
-    - 打开 VSCode。
-    - 前往 `扩展` 视图 (`Ctrl+Shift+X`)。
-    - 单击视图顶部的 `...` (更多操作) 菜单，然后选择 `从 VSIX 安装...`。
-    - 选择下载的 `.vsix` 文件进行安装。
-
 ## 🔑 获取您的 API 密钥
 
 要使用 Jules 扩展，您需要一个 Jules API 密钥。请按照以下步骤获取：
@@ -90,9 +74,10 @@ _（这是一个 UI 概念。实际显示可能会有所不同。）_
 3.  单击侧边栏中的 `$(robot)` 图标以打开 Jules 会话视图。
 4.  运行 `> Jules: Create Jules Session` 开始您的第一个编码会话！
 
-## ⚠️ 重要提示
+## 📚 参考
 
-- **卡片块渲染：** 在使用显示为卡片块的功能时，请注意内容的结构，以确保其正确渲染。
+- [Jules 官方网站](https://jules.google/docs)
+- [Jules API 文档](https://developers.google.com/jules/api)
 
 ## 🤝 贡献
 
@@ -101,4 +86,4 @@ _（这是一个 UI 概念。实际显示可能会有所不同。）_
 
 ## 📝 许可证
 
-[MIT](LICENSE)
+[MIT](../../LICENSE)

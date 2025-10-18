@@ -48,22 +48,6 @@ _(Esto es un concepto de la interfaz de usuario. La visualización real puede di
 1.  Busca "Jules Extension" en el Marketplace de VSCode (próximamente)
 2.  Haz clic en el botón `Install`
 
-### Desde un Archivo VSIX (Instalación Manual)
-
-Si quieres probar las últimas funciones que aún no se han publicado en el Marketplace, puedes descargar e instalar el archivo `.vsix` directamente desde la página de lanzamientos.
-
-1.  **Ve a la Página de Lanzamientos:**
-    Visita [Lanzamientos de GitHub](https://github.com/your-repo/jules-extension/releases) y encuentra la última versión.
-
-2.  **Descarga el Archivo VSIX:**
-    Descarga el archivo `.vsix` (p. ej., `jules-extension-0.1.0.vsix`) desde `Assets`.
-
-3.  **Instala en VSCode:**
-    - Abre VSCode.
-    - Ve a la vista de `Extensiones` (`Ctrl+Shift+X`).
-    - Haz clic en el menú `...` (Más Acciones) en la parte superior de la vista y selecciona `Instalar desde VSIX...`.
-    - Selecciona el archivo `.vsix` descargado para instalarlo.
-
 ## 🔑 Cómo Obtener tu Clave de API
 
 Para usar la Extensión de Jules, necesitas una clave de API de Jules. Sigue estos pasos para obtener una:
@@ -90,9 +74,10 @@ Para usar la Extensión de Jules, necesitas una clave de API de Jules. Sigue est
 3.  Haz clic en el icono `$(robot)` en la barra lateral para abrir la Vista de Sesiones de Jules.
 4.  Ejecuta `> Jules: Create Jules Session` para iniciar tu primera sesión de codificación.
 
-## ⚠️ Notas Importantes
+## 📚 Referencias
 
-- **Renderización de Bloques de Tarjetas:** Al utilizar funciones que se muestran como bloques de tarjetas, ten en cuenta la estructura del contenido para asegurar que se renderice correctamente.
+- [Sitio Web Oficial de Jules](https://jules.google/docs)
+- [Documentación de la API de Jules](https://developers.google.com/jules/api)
 
 ## 🤝 Contribución
 
@@ -101,4 +86,4 @@ Por favor, consulta el Rastreador de Problemas y los Pull Requests.
 
 ## 📝 Licencia
 
-[MIT](LICENSE)
+[MIT](../../LICENSE)

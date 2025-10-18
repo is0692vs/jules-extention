@@ -48,22 +48,6 @@ _(Ceci est un concept d'interface utilisateur. L'affichage réel peut différer.
 1.  Recherchez "Jules Extension" sur le Marketplace de VSCode (bientôt disponible)
 2.  Cliquez sur le bouton `Install`
 
-### Depuis un Fichier VSIX (Installation Manuelle)
-
-Si vous souhaitez essayer les dernières fonctionnalités qui ne sont pas encore publiées sur le Marketplace, vous pouvez télécharger et installer le fichier `.vsix` directement depuis la page des versions.
-
-1.  **Allez à la Page des Versions :**
-    Visitez les [Versions GitHub](https://github.com/your-repo/jules-extension/releases) et trouvez la dernière version.
-
-2.  **Téléchargez le Fichier VSIX :**
-    Téléchargez le fichier `.vsix` (par ex., `jules-extension-0.1.0.vsix`) depuis les `Assets`.
-
-3.  **Installez dans VSCode :**
-    - Ouvrez VSCode.
-    - Allez dans la vue `Extensions` (`Ctrl+Shift+X`).
-    - Cliquez sur le menu `...` (Plus d'Actions) en haut de la vue et sélectionnez `Installer depuis VSIX...`.
-    - Sélectionnez le fichier `.vsix` téléchargé pour l'installer.
-
 ## 🔑 Obtenir Votre Clé API
 
 Pour utiliser l'extension Jules, vous avez besoin d'une clé API Jules. Suivez ces étapes pour en obtenir une :
@@ -90,9 +74,10 @@ Pour utiliser l'extension Jules, vous avez besoin d'une clé API Jules. Suivez c
 3.  Cliquez sur l'icône `$(robot)` dans la barre latérale pour ouvrir la Vue des Sessions Jules.
 4.  Exécutez `> Jules: Create Jules Session` pour démarrer votre première session de codage !
 
-## ⚠️ Remarques Importantes
+## 📚 Références
 
-- **Rendu des Blocs de Cartes :** Lorsque vous utilisez des fonctionnalités affichées sous forme de blocs de cartes, veuillez faire attention à la structure du contenu pour garantir un rendu correct.
+- [Site Officiel de Jules](https://jules.google/docs)
+- [Documentation de l'API Jules](https://developers.google.com/jules/api)
 
 ## 🤝 Contribution
 
@@ -101,4 +86,4 @@ Veuillez consulter le Suivi des Problèmes et les Pull Requests.
 
 ## 📝 Licence
 
-[MIT](LICENSE)
+[MIT](../../LICENSE)
