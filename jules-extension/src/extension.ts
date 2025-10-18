@@ -638,7 +638,7 @@ async function sendMessageToSession(
               "Content-Type": "application/json",
               "X-Goog-Api-Key": apiKey,
             },
-            body: JSON.stringify({ prompt: normalizedPrompt }),
+            body: JSON.stringify({ prompt: normalizedPrompt.trim() }),
           }
         );
 
