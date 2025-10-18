@@ -649,76 +649,125 @@ export function activate(context: vscode.ExtensionContext) {
         );
         return;
       }
-      const prompt = await vscode.window.showInputBox({
-        prompt: "Enter your task description for Jules",
-        placeHolder: "e.g., Fix the login bug in authentication.ts",
-      });
-      if (!prompt) {
-        return;
-      }
-      const title = await vscode.window.showInputBox({
-        prompt: "Enter a title for the session",
-        placeHolder: "e.g., Fix Login Bug",
-        value: prompt.split(".")[0],
-      });
-      if (!title) {
-        return;
-      }
-      const createPR = await vscode.window.showQuickPick(["Yes", "No"], {
-        placeHolder: "Create PR automatically?",
-      });
-      if (createPR === undefined) {
-        return;
-      }
-      const automationMode = createPR === "Yes" ? "AUTO_CREATE_PR" : "MANUAL";
-      const requestBody: CreateSessionRequest = {
-        prompt,
-        sourceContext: {
-          source: selectedSource.name || selectedSource.id || "",
-          githubRepoContext: {
-            startingBranch: "main",
-          },
-        },
-        automationMode,
-        title,
-      };
+
       try {
-        await vscode.window.withProgress(
-          {
-            location: vscode.ProgressLocation.Notification,
-            title: "Creating Jules Session...",
-            cancellable: false,
-          },
-          async (progress) => {
-            progress.report({ increment: 0, message: "Sending request..." });
-            const response = await fetch(
-              "https://jules.googleapis.com/v1alpha/sessions",
-              {
-                method: "POST",
-                headers: {
-                  "X-Goog-Api-Key": apiKey,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify(requestBody),
-              }
+        // 1. Create and show a new document for the prompt
+        const doc = await vscode.workspace.openTextDocument({
+          content: "", // Start with an empty document
+          language: "markdown",
+        });
+        const editor = await vscode.window.showTextDocument(doc, {
+          preview: false,
+        });
+
+        // 2. Show an info message with a "Create Session" button
+        const selection = await vscode.window.showInformationMessage(
+          "Enter your task description for Jules in the new editor tab. Click 'Create Session' when you are done.",
+          { modal: false },
+          "Create Session"
+        );
+
+        // 3. Handle the result
+        if (selection === "Create Session") {
+          const prompt = editor.document.getText();
+
+          // Close the editor since we're done with it
+          await vscode.commands.executeCommand(
+            "workbench.action.closeActiveEditor"
+          );
+
+          if (!prompt.trim()) {
+            vscode.window.showWarningMessage(
+              "Task description was empty. Session not created."
             );
-            progress.report({
-              increment: 50,
-              message: "Processing response...",
-            });
-            if (!response.ok) {
-              throw new Error(
-                `Failed to create session: ${response.status} ${response.statusText}`
+            return;
+          }
+
+          const title = await vscode.window.showInputBox({
+            prompt: "Enter a title for the session",
+            placeHolder: "e.g., Fix Login Bug",
+            value: prompt.split(".")[0],
+          });
+          if (!title) {
+            return;
+          }
+          const createPR = await vscode.window.showQuickPick(["Yes", "No"], {
+            placeHolder: "Create PR automatically?",
+          });
+          if (createPR === undefined) {
+            return;
+          }
+          const automationMode =
+            createPR === "Yes" ? "AUTO_CREATE_PR" : "MANUAL";
+          const requestBody: CreateSessionRequest = {
+            prompt,
+            sourceContext: {
+              source: selectedSource.name || selectedSource.id || "",
+              githubRepoContext: {
+                startingBranch: "main",
+              },
+            },
+            automationMode,
+            title,
+          };
+
+          await vscode.window.withProgress(
+            {
+              location: vscode.ProgressLocation.Notification,
+              title: "Creating Jules Session...",
+              cancellable: false,
+            },
+            async (progress) => {
+              progress.report({
+                increment: 0,
+                message: "Sending request...",
+              });
+              const response = await fetch(
+                "https://jules.googleapis.com/v1alpha/sessions",
+                {
+                  method: "POST",
+                  headers: {
+                    "X-Goog-Api-Key": apiKey,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify(requestBody),
+                }
+              );
+              progress.report({
+                increment: 50,
+                message: "Processing response...",
+              });
+              if (!response.ok) {
+                throw new Error(
+                  `Failed to create session: ${response.status} ${response.statusText}`
+                );
+              }
+              const session = (await response.json()) as SessionResponse;
+              await context.globalState.update(
+                "active-session-id",
+                session.name
+              );
+              progress.report({
+                increment: 100,
+                message: "Session created!",
+              });
+              vscode.window.showInformationMessage(
+                `Session created: ${session.name}`
               );
             }
-            const session = (await response.json()) as SessionResponse;
-            await context.globalState.update("active-session-id", session.name);
-            progress.report({ increment: 100, message: "Session created!" });
-            vscode.window.showInformationMessage(
-              `Session created: ${session.name}`
+          );
+        } else {
+          // User dismissed the notification without creating
+          if (
+            vscode.window.activeTextEditor &&
+            vscode.window.activeTextEditor.document.uri === doc.uri
+          ) {
+            await vscode.commands.executeCommand(
+              "workbench.action.closeActiveEditor"
             );
           }
-        );
+          vscode.window.showWarningMessage("Session creation was cancelled.");
+        }
       } catch (error) {
         vscode.window.showErrorMessage(
           `Failed to create session: ${
