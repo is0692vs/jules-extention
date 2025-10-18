@@ -487,13 +487,12 @@ async function sendMessageToSession(
     } else {
       // User dismissed the notification without sending
       // We should close the created editor
-      if (
-        vscode.window.activeTextEditor &&
-        vscode.window.activeTextEditor.document.uri === doc.uri
-      ) {
-        await vscode.commands.executeCommand(
-          "workbench.action.closeActiveEditor"
-        );
+      // Close all tabs associated with the temporary document, regardless of which editor is active
+      const allTabs = vscode.window.tabGroups.all
+        .flatMap(group => group.tabs)
+        .filter(tab => tab.input && 'uri' in tab.input && tab.input.uri.toString() === doc.uri.toString());
+      if (allTabs.length > 0) {
+        await vscode.window.tabGroups.close(allTabs, true);
       }
       vscode.window.showWarningMessage("Message was canceled and not sent.");
     }
