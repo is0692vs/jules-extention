@@ -22,7 +22,7 @@ jobs:
 
             - name: Publish to Marketplace
               env:
-                  VSCE_PAT: $secrets.VSCE_PAT
+                  VSCE_PAT: $ secrets.VSCE_PAT
               run: |
                   npm install -g @vscode/vsce
                   vsce publish -p $VSCE_PAT
