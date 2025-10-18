@@ -157,10 +157,15 @@ function startAutoRefresh(
   sessionsProvider: JulesSessionsProvider
 ): void {
   const config = vscode.workspace.getConfiguration(
-    "julius-extension.autoRefresh"
+    "jules-extension.autoRefresh"
   );
   const isEnabled = config.get<boolean>("enabled");
-  const interval = config.get<number>("interval", 30000);
+  const intervalSeconds = config.get<number>("interval", 30);
+  const interval = intervalSeconds * 1000; // Convert seconds to milliseconds
+
+  console.log(
+    `Jules: Auto-refresh enabled=${isEnabled}, interval=${intervalSeconds}s (${interval}ms)`
+  );
 
   if (!isEnabled) {
     return;
@@ -171,6 +176,7 @@ function startAutoRefresh(
   }
 
   autoRefreshInterval = setInterval(() => {
+    console.log("Jules: Auto-refresh triggered");
     sessionsProvider.refresh();
   }, interval);
 }
@@ -420,42 +426,60 @@ class JulesSessionsProvider
   constructor(private context: vscode.ExtensionContext) {}
 
   async refresh(): Promise<void> {
-    this.sessions = await this.fetchSessions();
-    const sessionsData = this.sessions.map((item) => item.session);
+    console.log("Jules: refresh() called");
+    try {
+      this.sessions = await this.fetchSessions();
+      console.log(`Jules: refresh() fetched ${this.sessions.length} sessions`);
+      const sessionsData = this.sessions.map((item) => item.session);
 
-    const completedSessions = checkForCompletedSessions(sessionsData);
-    for (const session of completedSessions) {
-      const prUrl = extractPRUrl(session);
-      if (prUrl) {
-        await notifyPRCreated(session, prUrl);
+      const completedSessions = checkForCompletedSessions(sessionsData);
+      console.log(
+        `Jules: Found ${completedSessions.length} completed sessions`
+      );
+      updatePreviousStates(sessionsData);
+      for (const session of completedSessions) {
+        const prUrl = extractPRUrl(session);
+        if (prUrl) {
+          notifyPRCreated(session, prUrl).catch((error) => {
+            console.error("Jules: Failed to show PR notification", error);
+          });
+        }
       }
+    } catch (error) {
+      console.error("Jules: Error in refresh():", error);
+    } finally {
+      console.log("Jules: Firing onDidChangeTreeData event");
+      this._onDidChangeTreeData.fire();
     }
-    updatePreviousStates(sessionsData);
-    this._onDidChangeTreeData.fire();
   }
 
   getTreeItem(element: SessionTreeItem): vscode.TreeItem {
     return element;
   }
 
-  getChildren(element?: SessionTreeItem): Thenable<SessionTreeItem[]> {
+  async getChildren(element?: SessionTreeItem): Promise<SessionTreeItem[]> {
+    console.log(
+      `Jules: getChildren called, element=${
+        element ? "provided" : "none"
+      }, sessions count=${this.sessions.length}`
+    );
     if (element) {
-      return Promise.resolve([]);
+      return [];
     }
-    // If the cache is empty, it might be the first load.
-    if (this.sessions.length === 0) {
-      // This ensures the view is populated on first load.
-      return this.refresh().then(() => this.sessions);
-    }
-    return Promise.resolve(this.sessions);
+    console.log(
+      `Jules: Returning ${this.sessions.length} sessions to tree view`
+    );
+    return this.sessions;
   }
 
   private async fetchSessions(): Promise<SessionTreeItem[]> {
     const apiKey = await this.context.secrets.get("jules-api-key");
     if (!apiKey) {
+      console.log("Jules: No API key found");
       return [];
     }
     try {
+      console.log("Jules: Fetching sessions...");
       const response = await fetch(
         "https://jules.googleapis.com/v1alpha/sessions",
         {
@@ -467,57 +491,35 @@ class JulesSessionsProvider
         }
       );
       if (!response.ok) {
+        console.error(
+          `Jules: Failed to fetch sessions: ${response.status} ${response.statusText}`
+        );
         return [];
       }
       const data = (await response.json()) as SessionsResponse;
       if (!data.sessions || !Array.isArray(data.sessions)) {
+        console.log("Jules: No sessions found or invalid response format");
         return [];
       }
 
-      // 各セッションのアクティビティをチェックして完了状態を検知
-      const sessionsWithCheckedState = await Promise.all(
-        data.sessions.map(async (session) => {
-          try {
-            const activitiesResponse = await fetch(
-              `https://jules.googleapis.com/v1alpha/${session.name}/activities`,
-              {
-                method: "GET",
-                headers: {
-                  "X-Goog-Api-Key": apiKey,
-                  "Content-Type": "application/json",
-                },
-              }
-            );
-            if (activitiesResponse.ok) {
-              const activitiesData =
-                (await activitiesResponse.json()) as ActivitiesResponse;
-              const hasSessionCompleted = activitiesData.activities?.some(
-                (activity) => activity.sessionCompleted
-              );
-              if (hasSessionCompleted && session.state !== "COMPLETED") {
-                // APIのstateがCOMPLETEDでないが、アクティビティにsessionCompletedがある場合
-                return { ...session, state: "COMPLETED" as const };
-              }
-            }
-          } catch (error) {
-            // アクティビティ取得失敗時は元のstateを使用
-            console.warn(
-              `Failed to check activities for session ${session.name}:`,
-              error
-            );
-          }
-          return session;
-        })
-      );
+      console.log(`Jules: Found ${data.sessions.length} sessions`);
 
-      return sessionsWithCheckedState.map((session) => {
+      // セッションを直接マッピング（アクティビティチェックは後で必要に応じて実装）
+      const items = data.sessions.map((session) => {
         const mappedSession = {
           ...session,
           state: mapApiStateToSessionState(session.state),
         };
-        return new SessionTreeItem(mappedSession);
+        const item = new SessionTreeItem(mappedSession);
+        console.log(
+          `Jules: Created tree item: ${item.label} (${item.description})`
+        );
+        return item;
       });
+      console.log(`Jules: Returning ${items.length} tree items`);
+      return items;
     } catch (error) {
+      console.error("Jules: Error fetching sessions:", error);
       return [];
     }
   }
@@ -619,83 +621,54 @@ async function sendMessageToSession(
   }
 
   try {
-    // 1. Create and show a new document
-    const doc = await vscode.workspace.openTextDocument({
-      content: "", // Start with an empty document
-      language: "markdown",
-    });
-    const editor = await vscode.window.showTextDocument(doc, {
-      preview: false,
+    const prompt = await showMessageComposer({
+      title: "Send Message to Jules",
+      placeholder: "What would you like Jules to do?",
     });
 
-    // 2. Show an info message with a "Send" button
-    const selection = await vscode.window.showInformationMessage(
-      "Enter your message for Jules in the new editor tab. Click 'Send Message' when you are done.",
-      { modal: false }, // Make it non-modal so the user can edit
-      "Send Message"
+    if (prompt === undefined) {
+      vscode.window.showWarningMessage("Message was cancelled and not sent.");
+      return;
+    }
+
+    const trimmedPrompt = prompt.trim();
+    if (!trimmedPrompt) {
+      vscode.window.showWarningMessage("Message was empty and not sent.");
+      return;
+    }
+
+    await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: "Sending message to Jules...",
+      },
+      async () => {
+        const response = await fetch(
+          `https://jules.googleapis.com/v1alpha/${sessionId}:sendMessage`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Goog-Api-Key": apiKey,
+            },
+            body: JSON.stringify({ prompt: trimmedPrompt }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          const message =
+            errorText || `${response.status} ${response.statusText}`;
+          throw new Error(message);
+        }
+
+        vscode.window.showInformationMessage("Message sent successfully!");
+      }
     );
 
-    // 3. Handle the result
-    if (selection === "Send Message") {
-      const prompt = editor.document.getText();
-
-      // Close the editor since we're done with it
-      await vscode.commands.executeCommand(
-        "workbench.action.closeActiveEditor"
-      );
-
-      const trimmedPrompt = prompt.trim();
-      if (!trimmedPrompt) {
-        vscode.window.showWarningMessage("Message was empty and not sent.");
-        return;
-      }
-
-      // 4. Send the message (the rest of the original function)
-      await vscode.window.withProgress(
-        {
-          location: vscode.ProgressLocation.Notification,
-          title: "Sending message to Jules...",
-        },
-        async () => {
-          const response = await fetch(
-            `https://jules.googleapis.com/v1alpha/${sessionId}:sendMessage`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-Goog-Api-Key": apiKey,
-              },
-              body: JSON.stringify({ prompt: trimmedPrompt }),
-            }
-          );
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            const message =
-              errorText || `${response.status} ${response.statusText}`;
-            throw new Error(message);
-          }
-
-          vscode.window.showInformationMessage("Message sent successfully!");
-        }
-      );
-
-      await context.globalState.update("active-session-id", sessionId);
-      await context.globalState.update("currentSessionId", sessionId);
-      await vscode.commands.executeCommand("jules-extension.refreshActivities");
-    } else {
-      // User dismissed the notification without sending
-      // We should close the created editor
-      if (
-        vscode.window.activeTextEditor &&
-        vscode.window.activeTextEditor.document.uri === doc.uri
-      ) {
-        await vscode.commands.executeCommand(
-          "workbench.action.closeActiveEditor"
-        );
-      }
-      vscode.window.showWarningMessage("Message was cancelled and not sent.");
-    }
+    await context.globalState.update("active-session-id", sessionId);
+    await context.globalState.update("currentSessionId", sessionId);
+    await vscode.commands.executeCommand("jules-extension.refreshActivities");
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unknown error occurred.";
@@ -850,123 +823,93 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       try {
-        // 1. Create and show a new document for the prompt
-        const doc = await vscode.workspace.openTextDocument({
-          content: "", // Start with an empty document
-          language: "markdown",
-        });
-        const editor = await vscode.window.showTextDocument(doc, {
-          preview: false,
+        const prompt = await showMessageComposer({
+          title: "Create Jules Session",
+          placeholder: "Describe the task you want Jules to tackle...",
         });
 
-        // 2. Show an info message with a "Create Session" button
-        const selection = await vscode.window.showInformationMessage(
-          "Enter your task description for Jules in the new editor tab. Click 'Create Session' when you are done.",
-          { modal: false },
-          "Create Session"
-        );
+        if (prompt === undefined) {
+          vscode.window.showWarningMessage("Session creation was cancelled.");
+          return;
+        }
 
-        // 3. Handle the result
-        if (selection === "Create Session") {
-          const prompt = editor.document.getText();
-
-          // Close the editor since we're done with it
-          await vscode.commands.executeCommand(
-            "workbench.action.closeActiveEditor"
+        const trimmedPrompt = prompt.trim();
+        if (!trimmedPrompt) {
+          vscode.window.showWarningMessage(
+            "Task description was empty. Session not created."
           );
+          return;
+        }
 
-          if (!prompt.trim()) {
-            vscode.window.showWarningMessage(
-              "Task description was empty. Session not created."
-            );
-            return;
-          }
-
-          const title = await vscode.window.showInputBox({
-            prompt: "Enter a title for the session",
-            placeHolder: "e.g., Fix Login Bug",
-            value: prompt.split(".")[0],
-          });
-          if (!title) {
-            return;
-          }
-          const createPR = await vscode.window.showQuickPick(["Yes", "No"], {
-            placeHolder: "Create PR automatically?",
-          });
-          if (createPR === undefined) {
-            return;
-          }
-          const automationMode =
-            createPR === "Yes" ? "AUTO_CREATE_PR" : "MANUAL";
-          const requestBody: CreateSessionRequest = {
-            prompt,
-            sourceContext: {
-              source: selectedSource.name || selectedSource.id || "",
-              githubRepoContext: {
-                startingBranch: "main",
-              },
+        const title = await vscode.window.showInputBox({
+          prompt: "Enter a title for the session",
+          placeHolder: "e.g., Fix Login Bug",
+          value: trimmedPrompt.split(".")[0],
+        });
+        if (!title) {
+          return;
+        }
+        const createPR = await vscode.window.showQuickPick(["Yes", "No"], {
+          placeHolder: "Create PR automatically?",
+        });
+        if (createPR === undefined) {
+          return;
+        }
+        const automationMode = createPR === "Yes" ? "AUTO_CREATE_PR" : "MANUAL";
+        const requestBody: CreateSessionRequest = {
+          prompt: trimmedPrompt,
+          sourceContext: {
+            source: selectedSource.name || selectedSource.id || "",
+            githubRepoContext: {
+              startingBranch: "main",
             },
-            automationMode,
-            title,
-          };
+          },
+          automationMode,
+          title,
+        };
 
-          await vscode.window.withProgress(
-            {
-              location: vscode.ProgressLocation.Notification,
-              title: "Creating Jules Session...",
-              cancellable: false,
-            },
-            async (progress) => {
-              progress.report({
-                increment: 0,
-                message: "Sending request...",
-              });
-              const response = await fetch(
-                "https://jules.googleapis.com/v1alpha/sessions",
-                {
-                  method: "POST",
-                  headers: {
-                    "X-Goog-Api-Key": apiKey,
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify(requestBody),
-                }
-              );
-              progress.report({
-                increment: 50,
-                message: "Processing response...",
-              });
-              if (!response.ok) {
-                throw new Error(
-                  `Failed to create session: ${response.status} ${response.statusText}`
-                );
+        await vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: "Creating Jules Session...",
+            cancellable: false,
+          },
+          async (progress) => {
+            progress.report({
+              increment: 0,
+              message: "Sending request...",
+            });
+            const response = await fetch(
+              "https://jules.googleapis.com/v1alpha/sessions",
+              {
+                method: "POST",
+                headers: {
+                  "X-Goog-Api-Key": apiKey,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestBody),
               }
-              const session = (await response.json()) as SessionResponse;
-              await context.globalState.update(
-                "active-session-id",
-                session.name
-              );
-              progress.report({
-                increment: 100,
-                message: "Session created!",
-              });
-              vscode.window.showInformationMessage(
-                `Session created: ${session.name}`
+            );
+            progress.report({
+              increment: 50,
+              message: "Processing response...",
+            });
+            if (!response.ok) {
+              throw new Error(
+                `Failed to create session: ${response.status} ${response.statusText}`
               );
             }
-          );
-        } else {
-          // User dismissed the notification without creating
-          if (
-            vscode.window.activeTextEditor &&
-            vscode.window.activeTextEditor.document.uri === doc.uri
-          ) {
-            await vscode.commands.executeCommand(
-              "workbench.action.closeActiveEditor"
+            const session = (await response.json()) as SessionResponse;
+            await context.globalState.update("active-session-id", session.name);
+            progress.report({
+              increment: 100,
+              message: "Session created!",
+            });
+            vscode.window.showInformationMessage(
+              `Session created: ${session.name}`
             );
           }
-          vscode.window.showWarningMessage("Session creation was cancelled.");
-        }
+        );
       } catch (error) {
         vscode.window.showErrorMessage(
           `Failed to create session: ${
@@ -980,19 +923,32 @@ export function activate(context: vscode.ExtensionContext) {
   const sessionsProvider = new JulesSessionsProvider(context);
   const sessionsTreeView = vscode.window.createTreeView("julesSessionsView", {
     treeDataProvider: sessionsProvider,
+    showCollapseAll: false,
   });
+  console.log("Jules: TreeView created");
+
+  // Perform initial refresh to populate the tree view (async, don't wait)
+  console.log("Jules: Starting initial refresh...");
+  sessionsProvider
+    .refresh()
+    .then(() => {
+      console.log("Jules: Initial refresh completed");
+    })
+    .catch((error) => {
+      console.error("Jules: Initial refresh failed:", error);
+    });
 
   startAutoRefresh(context, sessionsProvider);
 
   const onDidChangeConfiguration = vscode.workspace.onDidChangeConfiguration(
     (event) => {
       if (
-        event.affectsConfiguration("julius-extension.autoRefresh.enabled") ||
-        event.affectsConfiguration("julius-extension.autoRefresh.interval")
+        event.affectsConfiguration("jules-extension.autoRefresh.enabled") ||
+        event.affectsConfiguration("jules-extension.autoRefresh.interval")
       ) {
         stopAutoRefresh();
         const autoRefreshEnabled = vscode.workspace
-          .getConfiguration("julius-extension.autoRefresh")
+          .getConfiguration("jules-extension.autoRefresh")
           .get<boolean>("enabled");
         if (autoRefreshEnabled) {
           startAutoRefresh(context, sessionsProvider);
