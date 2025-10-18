@@ -640,7 +640,9 @@ async function sendMessageToSession(
       const prompt = editor.document.getText();
 
       // Close the editor since we're done with it
-      await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+      await vscode.commands.executeCommand(
+        "workbench.action.closeActiveEditor"
+      );
 
       const trimmedPrompt = prompt.trim();
       if (!trimmedPrompt) {
