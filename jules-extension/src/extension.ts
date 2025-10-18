@@ -434,26 +434,10 @@ async function sendMessageToSession(
 
     // 3. Handle the result
     if (selection === "Send Message") {
-      // Check if the document is still open before accessing its content
-      const isDocumentOpen = vscode.workspace.textDocuments.some(
-        (openDoc) => openDoc.uri.toString() === editor.document.uri.toString()
-      );
-      if (!isDocumentOpen) {
-        vscode.window.showWarningMessage(
-          "The message editor was closed before sending. Message was not sent."
-        );
-        return;
-      }
       const prompt = editor.document.getText();
 
-      // Close the editor showing the temporary document, even if it's not active
-      const targetEditor = vscode.window.visibleTextEditors.find(
-        (e) => e.document.uri.toString() === doc.uri.toString()
-      );
-      if (targetEditor) {
-        await vscode.window.showTextDocument(targetEditor.document, { preview: false });
-        await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-      }
+      // Close the editor since we're done with it
+      await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
 
       const trimmedPrompt = prompt.trim();
       if (!trimmedPrompt) {
@@ -497,14 +481,15 @@ async function sendMessageToSession(
     } else {
       // User dismissed the notification without sending
       // We should close the created editor
-      // Close all tabs associated with the temporary document, regardless of which editor is active
-      const allTabs = vscode.window.tabGroups.all
-        .flatMap(group => group.tabs)
-        .filter(tab => tab.input && 'uri' in tab.input && tab.input.uri.toString() === doc.uri.toString());
-      if (allTabs.length > 0) {
-        await vscode.window.tabGroups.close(allTabs, true);
+      if (
+        vscode.window.activeTextEditor &&
+        vscode.window.activeTextEditor.document.uri === doc.uri
+      ) {
+        await vscode.commands.executeCommand(
+          "workbench.action.closeActiveEditor"
+        );
       }
-      vscode.window.showWarningMessage("Message was canceled and not sent.");
+      vscode.window.showWarningMessage("Message was cancelled and not sent.");
     }
   } catch (error) {
     const message =
