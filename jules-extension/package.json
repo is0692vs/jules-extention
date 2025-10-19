@@ -96,6 +96,11 @@
         "title": "Approve Jules Plan",
         "category": "Jules",
         "icon": "$(check)"
+      },
+      {
+        "command": "jules-extension.openSettings",
+        "title": "Open Jules Settings",
+        "icon": "$(settings-gear)"
       }
     ],
     "views": {
@@ -129,6 +134,11 @@
           "command": "jules-extension.refreshSessions",
           "when": "view == julesSessionsView",
           "group": "navigation@4"
+        },
+        {
+          "command": "jules-extension.openSettings",
+          "when": "view == julesSessionsView",
+          "group": "navigation@5"
         }
       ],
       "view/item/context": [
