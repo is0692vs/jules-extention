@@ -46,6 +46,7 @@ interface Session {
   name: string;
   title: string;
   state: "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED";
+  rawState: string;
   outputs?: SessionOutput[];
   sourceContext?: {
     source: string;
@@ -79,6 +80,7 @@ function mapApiStateToSessionState(
 interface SessionState {
   name: string;
   state: string;
+  rawState: string;
   outputs?: SessionOutput[];
 }
 
@@ -123,16 +125,35 @@ function extractPRUrlFromState(state: SessionState): string | null {
 function checkForCompletedSessions(currentSessions: Session[]): Session[] {
   const completedSessions: Session[] = [];
   for (const session of currentSessions) {
-    if (session.state === "COMPLETED") {
-      const prevState = previousSessionStates.get(session.name);
-      const currentPr = extractPRUrl(session);
-      const prevPr = prevState ? extractPRUrlFromState(prevState) : null;
-      if (currentPr && (!prevPr || prevState?.state === "RUNNING")) {
+    const prevState = previousSessionStates.get(session.name);
+    if (
+      session.state === "COMPLETED" &&
+      (!prevState || prevState.state !== "COMPLETED")
+    ) {
+      const prUrl = extractPRUrl(session);
+      if (prUrl) {
+        // Only count as a new completion if there's a PR URL.
         completedSessions.push(session);
       }
     }
   }
   return completedSessions;
+}
+
+function checkForPlansAwaitingApproval(
+  currentSessions: Session[]
+): Session[] {
+  const sessionsAwaitingApproval: Session[] = [];
+  for (const session of currentSessions) {
+    const prevState = previousSessionStates.get(session.name);
+    if (
+      session.rawState === "AWAITING_PLAN_APPROVAL" &&
+      (!prevState || prevState.rawState !== "AWAITING_PLAN_APPROVAL")
+    ) {
+      sessionsAwaitingApproval.push(session);
+    }
+  }
+  return sessionsAwaitingApproval;
 }
 
 async function notifyPRCreated(session: Session, prUrl: string): Promise<void> {
@@ -145,11 +166,32 @@ async function notifyPRCreated(session: Session, prUrl: string): Promise<void> {
   }
 }
 
+async function notifyPlanAwaitingApproval(
+  session: Session,
+  context: vscode.ExtensionContext
+): Promise<void> {
+  const selection = await vscode.window.showInformationMessage(
+    `Jules has a plan ready for your approval in session: "${session.title}"`,
+    "Approve Plan",
+    "View Details"
+  );
+
+  if (selection === "Approve Plan") {
+    await approvePlan(session.name, context);
+  } else if (selection === "View Details") {
+    await vscode.commands.executeCommand(
+      "jules-extension.showActivities",
+      session.name
+    );
+  }
+}
+
 function updatePreviousStates(currentSessions: Session[]): void {
   for (const session of currentSessions) {
     previousSessionStates.set(session.name, {
       name: session.name,
       state: session.state,
+      rawState: session.rawState,
       outputs: session.outputs,
     });
   }
@@ -522,15 +564,33 @@ class JulesSessionsProvider
 
       const allSessionsMapped = data.sessions.map((session) => ({
         ...session,
+        rawState: session.state,
         state: mapApiStateToSessionState(session.state),
       }));
 
+      // --- Check for plans awaiting approval ---
+      const plansAwaitingApproval =
+        checkForPlansAwaitingApproval(allSessionsMapped);
+      if (plansAwaitingApproval.length > 0) {
+        console.log(
+          `Jules: Found ${plansAwaitingApproval.length} sessions awaiting plan approval`
+        );
+        for (const session of plansAwaitingApproval) {
+          notifyPlanAwaitingApproval(session, this.context).catch((error) => {
+            console.error(
+              "Jules: Failed to show plan approval notification",
+              error
+            );
+          });
+        }
+      }
+
+      // --- Check for completed sessions (PR created) ---
       const completedSessions = checkForCompletedSessions(allSessionsMapped);
       if (completedSessions.length > 0) {
         console.log(
           `Jules: Found ${completedSessions.length} completed sessions`
         );
-        updatePreviousStates(allSessionsMapped);
         for (const session of completedSessions) {
           const prUrl = extractPRUrl(session);
           if (prUrl) {
@@ -540,6 +600,9 @@ class JulesSessionsProvider
           }
         }
       }
+
+      // --- Update previous states after all checks ---
+      updatePreviousStates(allSessionsMapped);
 
       const filteredSessions = allSessionsMapped.filter(
         (session) =>
@@ -1089,37 +1152,6 @@ export function activate(context: vscode.ExtensionContext) {
             );
           });
 
-          // planGeneratedを検出した場合、承認を促す通知を表示
-          if (planDetected) {
-            // 最初のユーザーメッセージを取得
-            const firstUserActivity = data.activities
-              .filter((activity) => activity.originator === "user")
-              .sort(
-                (a, b) =>
-                  new Date(a.createTime).getTime() -
-                  new Date(b.createTime).getTime()
-              )[0];
-            const firstMessage = firstUserActivity
-              ? firstUserActivity.progressUpdated?.title ||
-                firstUserActivity.progressUpdated?.description ||
-                "Initial request"
-              : "Initial request";
-
-            vscode.window
-              .showInformationMessage(
-                `Plan generated for session "${session.title}". Initial request: "${firstMessage}". Would you like to approve it?`,
-                "Approve Plan",
-                "View Details",
-                "Dismiss"
-              )
-              .then((selection) => {
-                if (selection === "Approve Plan") {
-                  approvePlan(sessionId, context);
-                } else if (selection === "View Details") {
-                  activitiesChannel.show();
-                }
-              });
-          }
         }
         await context.globalState.update("currentSessionId", sessionId);
         await context.globalState.update("active-session-id", sessionId);
