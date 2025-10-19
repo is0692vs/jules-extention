@@ -199,11 +199,17 @@ function resetAutoRefresh(
   startAutoRefresh(context, sessionsProvider);
 }
 
+interface CustomPrompt {
+  label: string;
+  prompt: string;
+}
+
 interface ComposerOptions {
-  title: string;
+  title:string;
   placeholder?: string;
   value?: string;
   showCreatePrCheckbox?: boolean;
+  customPrompts?: CustomPrompt[];
 }
 
 interface ComposerResult {
@@ -272,6 +278,26 @@ function getComposerHtml(
     </div>
   `
     : "";
+  const customPromptsOptions =
+    options.customPrompts
+      ?.map(
+        (p) =>
+          `<option value="${escapeAttribute(p.prompt)}">${escapeHtml(
+            p.label
+          )}</option>`
+      )
+      .join("") ?? "";
+  const customPromptsSelect =
+    options.customPrompts && options.customPrompts.length > 0
+      ? `
+    <div class="custom-prompts-container">
+      <select id="custom-prompts">
+        <option value="">Select a custom prompt...</option>
+        ${customPromptsOptions}
+      </select>
+    </div>
+  `
+      : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -312,6 +338,19 @@ function getComposerHtml(
     outline: 1px solid var(--vscode-focusBorder);
   }
 
+  .custom-prompts-container {
+    margin-bottom: 16px;
+  }
+
+  select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid var(--vscode-input-border);
+    background: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+  }
+
   .actions {
     display: flex;
     justify-content: flex-end;
@@ -347,6 +386,7 @@ function getComposerHtml(
 </style>
 </head>
 <body>
+  ${customPromptsSelect}
   <textarea id="message" placeholder="${placeholder}" autofocus>${value}</textarea>
   <div class="actions">
     ${createPrCheckbox}
@@ -357,6 +397,8 @@ function getComposerHtml(
     const vscode = acquireVsCodeApi();
     const textarea = document.getElementById('message');
     const createPrCheckbox = document.getElementById('create-pr');
+    const customPromptsSelect = document.getElementById('custom-prompts');
+
     const submit = () => {
       vscode.postMessage({
         type: 'submit',
@@ -364,6 +406,14 @@ function getComposerHtml(
         createPR: createPrCheckbox ? createPrCheckbox.checked : false,
       });
     };
+
+    if (customPromptsSelect) {
+      customPromptsSelect.addEventListener('change', (event) => {
+        if (event.target.value) {
+          textarea.value = event.target.value;
+        }
+      });
+    }
 
     document.getElementById('submit').addEventListener('click', submit);
     document.getElementById('cancel').addEventListener('click', () => {
@@ -659,9 +709,13 @@ async function sendMessageToSession(
   }
 
   try {
+    const customPrompts = vscode.workspace
+      .getConfiguration("jules-extension")
+      .get<CustomPrompt[]>("customPrompts", []);
     const result = await showMessageComposer({
       title: "Send Message to Jules",
       placeholder: "What would you like Jules to do?",
+      customPrompts,
     });
 
     if (result === undefined) {
@@ -890,10 +944,14 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       try {
+        const customPrompts = vscode.workspace
+          .getConfiguration("jules-extension")
+          .get<CustomPrompt[]>("customPrompts", []);
         const result = await showMessageComposer({
           title: "Create Jules Session",
           placeholder: "Describe the task you want Jules to tackle...",
           showCreatePrCheckbox: true,
+          customPrompts,
         });
 
         if (result === undefined) {
