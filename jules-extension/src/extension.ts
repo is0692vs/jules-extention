@@ -521,7 +521,6 @@ class JulesSessionsProvider
 
       // 正常に戻った場合はステータスバーを元に戻す
       updateStatusBar(this.context, this.statusBarItem);
-      this.statusBarItem.backgroundColor = undefined;
 
       const data = (await response.json()) as SessionsResponse;
       if (!data.sessions || !Array.isArray(data.sessions)) {
