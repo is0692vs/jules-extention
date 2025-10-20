@@ -351,6 +351,9 @@ function getComposerHtml(
     color: var(--vscode-input-foreground);
   }
 
+  select:focus {
+    outline: 1px solid var(--vscode-focusBorder);
+  }
   .actions {
     display: flex;
     justify-content: flex-end;
