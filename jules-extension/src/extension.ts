@@ -124,7 +124,9 @@ function resolveSessionId(
 }
 
 function extractPRUrl(sessionOrState: Session | SessionState): string | null {
-  return sessionOrState.outputs?.find((o) => o.pullRequest)?.pullRequest?.url || null;
+  return (
+    sessionOrState.outputs?.find((o) => o.pullRequest)?.pullRequest?.url || null
+  );
 }
 
 function checkForCompletedSessions(currentSessions: Session[]): Session[] {
@@ -542,16 +544,13 @@ class JulesSessionsProvider
 
     try {
       console.log("Jules: Fetching sessions in getChildren...");
-      const response = await fetch(
-        `${JULES_API_BASE_URL}/sessions`,
-        {
-          method: "GET",
-          headers: {
-            "X-Goog-Api-Key": apiKey,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch(`${JULES_API_BASE_URL}/sessions`, {
+        method: "GET",
+        headers: {
+          "X-Goog-Api-Key": apiKey,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (!response.ok) {
         const errorMsg = `Failed to fetch sessions: ${response.status} ${response.statusText}`;
@@ -807,7 +806,7 @@ function updateStatusBar(
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  console.log('Jules Extension is now active');
+  console.log("Jules Extension is now active");
 
   const sessionsProvider = new JulesSessionsProvider(context);
   const sessionsTreeView = vscode.window.createTreeView("julesSessionsView", {
@@ -854,16 +853,13 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
       try {
-        const response = await fetch(
-          `${JULES_API_BASE_URL}/sources`,
-          {
-            method: "GET",
-            headers: {
-              "X-Goog-Api-Key": apiKey,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(`${JULES_API_BASE_URL}/sources`, {
+          method: "GET",
+          headers: {
+            "X-Goog-Api-Key": apiKey,
+            "Content-Type": "application/json",
+          },
+        });
         if (response.ok) {
           vscode.window.showInformationMessage("API Key is valid.");
         } else {
@@ -887,16 +883,13 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
       try {
-        const response = await fetch(
-          `${JULES_API_BASE_URL}/sources`,
-          {
-            method: "GET",
-            headers: {
-              "X-Goog-Api-Key": apiKey,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(`${JULES_API_BASE_URL}/sources`, {
+          method: "GET",
+          headers: {
+            "X-Goog-Api-Key": apiKey,
+            "Content-Type": "application/json",
+          },
+        });
         if (!response.ok) {
           vscode.window.showErrorMessage(
             `Failed to fetch sources: ${response.status} ${response.statusText}`
@@ -999,17 +992,14 @@ export function activate(context: vscode.ExtensionContext) {
               increment: 0,
               message: "Sending request...",
             });
-            const response = await fetch(
-              `${JULES_API_BASE_URL}/sessions`,
-              {
-                method: "POST",
-                headers: {
-                  "X-Goog-Api-Key": apiKey,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify(requestBody),
-              }
-            );
+            const response = await fetch(`${JULES_API_BASE_URL}/sessions`, {
+              method: "POST",
+              headers: {
+                "X-Goog-Api-Key": apiKey,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(requestBody),
+            });
             progress.report({
               increment: 50,
               message: "Processing response...",
