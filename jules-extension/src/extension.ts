@@ -46,6 +46,7 @@ interface Session {
   name: string;
   title: string;
   state: "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED";
+  rawState: string;
   outputs?: SessionOutput[];
   sourceContext?: {
     source: string;
@@ -79,6 +80,7 @@ function mapApiStateToSessionState(
 interface SessionState {
   name: string;
   state: string;
+  rawState: string;
   outputs?: SessionOutput[];
 }
 
@@ -123,16 +125,35 @@ function extractPRUrlFromState(state: SessionState): string | null {
 function checkForCompletedSessions(currentSessions: Session[]): Session[] {
   const completedSessions: Session[] = [];
   for (const session of currentSessions) {
-    if (session.state === "COMPLETED") {
-      const prevState = previousSessionStates.get(session.name);
-      const currentPr = extractPRUrl(session);
-      const prevPr = prevState ? extractPRUrlFromState(prevState) : null;
-      if (currentPr && (!prevPr || prevState?.state === "RUNNING")) {
+    const prevState = previousSessionStates.get(session.name);
+    if (
+      session.state === "COMPLETED" &&
+      (!prevState || prevState.state !== "COMPLETED")
+    ) {
+      const prUrl = extractPRUrl(session);
+      if (prUrl) {
+        // Only count as a new completion if there's a PR URL.
         completedSessions.push(session);
       }
     }
   }
   return completedSessions;
+}
+
+function checkForPlansAwaitingApproval(
+  currentSessions: Session[]
+): Session[] {
+  const sessionsAwaitingApproval: Session[] = [];
+  for (const session of currentSessions) {
+    const prevState = previousSessionStates.get(session.name);
+    if (
+      session.rawState === "AWAITING_PLAN_APPROVAL" &&
+      (!prevState || prevState.rawState !== "AWAITING_PLAN_APPROVAL")
+    ) {
+      sessionsAwaitingApproval.push(session);
+    }
+  }
+  return sessionsAwaitingApproval;
 }
 
 async function notifyPRCreated(session: Session, prUrl: string): Promise<void> {
@@ -145,11 +166,32 @@ async function notifyPRCreated(session: Session, prUrl: string): Promise<void> {
   }
 }
 
+async function notifyPlanAwaitingApproval(
+  session: Session,
+  context: vscode.ExtensionContext
+): Promise<void> {
+  const selection = await vscode.window.showInformationMessage(
+    `Jules has a plan ready for your approval in session: "${session.title}"`,
+    "Approve Plan",
+    "View Details"
+  );
+
+  if (selection === "Approve Plan") {
+    await approvePlan(session.name, context);
+  } else if (selection === "View Details") {
+    await vscode.commands.executeCommand(
+      "jules-extension.showActivities",
+      session.name
+    );
+  }
+}
+
 function updatePreviousStates(currentSessions: Session[]): void {
   for (const session of currentSessions) {
     previousSessionStates.set(session.name, {
       name: session.name,
       state: session.state,
+      rawState: session.rawState,
       outputs: session.outputs,
     });
   }
@@ -199,13 +241,8 @@ function resetAutoRefresh(
   startAutoRefresh(context, sessionsProvider);
 }
 
-interface CustomPrompt {
-  label: string;
-  prompt: string;
-}
-
 interface ComposerOptions {
-  title:string;
+  title: string;
   placeholder?: string;
   value?: string;
   showCreatePrCheckbox?: boolean;
@@ -362,7 +399,6 @@ function getComposerHtml(
     const vscode = acquireVsCodeApi();
     const textarea = document.getElementById('message');
     const createPrCheckbox = document.getElementById('create-pr');
-
     const submit = () => {
       vscode.postMessage({
         type: 'submit',
@@ -462,10 +498,7 @@ class JulesSessionsProvider
     vscode.TreeItem | undefined | null | void
   > = this._onDidChangeTreeData.event;
 
-  constructor(
-    private context: vscode.ExtensionContext,
-    private statusBarItem: vscode.StatusBarItem
-  ) {}
+  constructor(private context: vscode.ExtensionContext) {}
 
   refresh(): void {
     console.log("Jules: refresh() called, firing event.");
@@ -515,18 +548,11 @@ class JulesSessionsProvider
       );
 
       if (!response.ok) {
-        const errorMsg = `API Error: ${response.status} ${response.statusText}`;
+        const errorMsg = `Failed to fetch sessions: ${response.status} ${response.statusText}`;
         console.error(`Jules: ${errorMsg}`);
-        this.statusBarItem.text = "$(error) Jules: Refresh failed";
-        this.statusBarItem.tooltip = `Failed to fetch sessions. ${errorMsg}. Click to retry.`;
-        this.statusBarItem.backgroundColor = new vscode.ThemeColor(
-          "statusBarItem.errorBackground"
-        );
+        vscode.window.showErrorMessage(errorMsg);
         return [];
       }
-
-      // 正常に戻った場合はステータスバーを元に戻す
-      updateStatusBar(this.context, this.statusBarItem);
 
       const data = (await response.json()) as SessionsResponse;
       if (!data.sessions || !Array.isArray(data.sessions)) {
@@ -538,15 +564,33 @@ class JulesSessionsProvider
 
       const allSessionsMapped = data.sessions.map((session) => ({
         ...session,
+        rawState: session.state,
         state: mapApiStateToSessionState(session.state),
       }));
 
+      // --- Check for plans awaiting approval ---
+      const plansAwaitingApproval =
+        checkForPlansAwaitingApproval(allSessionsMapped);
+      if (plansAwaitingApproval.length > 0) {
+        console.log(
+          `Jules: Found ${plansAwaitingApproval.length} sessions awaiting plan approval`
+        );
+        for (const session of plansAwaitingApproval) {
+          notifyPlanAwaitingApproval(session, this.context).catch((error) => {
+            console.error(
+              "Jules: Failed to show plan approval notification",
+              error
+            );
+          });
+        }
+      }
+
+      // --- Check for completed sessions (PR created) ---
       const completedSessions = checkForCompletedSessions(allSessionsMapped);
       if (completedSessions.length > 0) {
         console.log(
           `Jules: Found ${completedSessions.length} completed sessions`
         );
-        updatePreviousStates(allSessionsMapped);
         for (const session of completedSessions) {
           const prUrl = extractPRUrl(session);
           if (prUrl) {
@@ -556,6 +600,9 @@ class JulesSessionsProvider
           }
         }
       }
+
+      // --- Update previous states after all checks ---
+      updatePreviousStates(allSessionsMapped);
 
       const filteredSessions = allSessionsMapped.filter(
         (session) =>
@@ -571,16 +618,9 @@ class JulesSessionsProvider
 
       return filteredSessions.map((session) => new SessionTreeItem(session));
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      console.error(
-        "Jules: Error fetching sessions in getChildren:",
-        errorMsg
-      );
-      this.statusBarItem.text = "$(error) Jules: Refresh failed";
-      this.statusBarItem.tooltip = `Failed to fetch sessions: ${errorMsg}. Click to retry.`;
-      this.statusBarItem.backgroundColor = new vscode.ThemeColor(
-        "statusBarItem.errorBackground"
-      );
+      const errorMsg = `Failed to fetch sessions: ${error}`;
+      console.error("Jules: Error fetching sessions in getChildren:", error);
+      vscode.window.showErrorMessage(errorMsg);
       return [];
     }
   }
@@ -692,19 +732,11 @@ async function sendMessageToSession(
       return;
     }
 
-    const userPrompt = result.prompt.trim();
-    if (!userPrompt) {
+    const trimmedPrompt = result.prompt.trim();
+    if (!trimmedPrompt) {
       vscode.window.showWarningMessage("Message was empty and not sent.");
       return;
     }
-
-    const customPrompt = vscode.workspace
-      .getConfiguration("jules-extension")
-      .get<string>("customPrompts", "");
-
-    const finalPrompt = customPrompt
-      ? `custom prompt: "${customPrompt}"\n\n${userPrompt}`
-      : userPrompt;
 
     await vscode.window.withProgress(
       {
@@ -720,7 +752,7 @@ async function sendMessageToSession(
               "Content-Type": "application/json",
               "X-Goog-Api-Key": apiKey,
             },
-            body: JSON.stringify({ prompt: finalPrompt }),
+            body: JSON.stringify({ prompt: trimmedPrompt }),
           }
         );
 
@@ -775,6 +807,13 @@ export function activate(context: vscode.ExtensionContext) {
     'Congratulations, your extension "jules-extension" is now active!'
   );
 
+  const sessionsProvider = new JulesSessionsProvider(context);
+  const sessionsTreeView = vscode.window.createTreeView("julesSessionsView", {
+    treeDataProvider: sessionsProvider,
+    showCollapseAll: false,
+  });
+  console.log("Jules: TreeView created");
+
   // ステータスバーアイテム作成
   const statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
@@ -785,13 +824,6 @@ export function activate(context: vscode.ExtensionContext) {
 
   // 初期表示を更新
   updateStatusBar(context, statusBarItem);
-
-  const sessionsProvider = new JulesSessionsProvider(context, statusBarItem);
-  const sessionsTreeView = vscode.window.createTreeView("julesSessionsView", {
-    treeDataProvider: sessionsProvider,
-    showCollapseAll: false,
-  });
-  console.log("Jules: TreeView created");
 
   // Create OutputChannel for Activities
   const activitiesChannel =
@@ -932,26 +964,18 @@ export function activate(context: vscode.ExtensionContext) {
           return;
         }
 
-        const userPrompt = result.prompt.trim();
-        if (!userPrompt) {
+        const trimmedPrompt = result.prompt.trim();
+        if (!trimmedPrompt) {
           vscode.window.showWarningMessage(
             "Task description was empty. Session not created."
           );
           return;
         }
 
-        const customPrompt = vscode.workspace
-          .getConfiguration("jules-extension")
-          .get<string>("customPrompts", "");
-
-        const finalPrompt = customPrompt
-          ? `custom prompt: "${customPrompt}"\n\n${userPrompt}`
-          : userPrompt;
-
-        const title = userPrompt.split("\n")[0];
+        const title = trimmedPrompt.split("\n")[0];
         const automationMode = result.createPR ? "AUTO_CREATE_PR" : "MANUAL";
         const requestBody: CreateSessionRequest = {
-          prompt: finalPrompt,
+          prompt: trimmedPrompt,
           sourceContext: {
             source: selectedSource.name || selectedSource.id || "",
             githubRepoContext: {
@@ -1128,37 +1152,6 @@ export function activate(context: vscode.ExtensionContext) {
             );
           });
 
-          // planGeneratedを検出した場合、承認を促す通知を表示
-          if (planDetected) {
-            // 最初のユーザーメッセージを取得
-            const firstUserActivity = data.activities
-              .filter((activity) => activity.originator === "user")
-              .sort(
-                (a, b) =>
-                  new Date(a.createTime).getTime() -
-                  new Date(b.createTime).getTime()
-              )[0];
-            const firstMessage = firstUserActivity
-              ? firstUserActivity.progressUpdated?.title ||
-                firstUserActivity.progressUpdated?.description ||
-                "Initial request"
-              : "Initial request";
-
-            vscode.window
-              .showInformationMessage(
-                `Plan generated for session "${session.title}". Initial request: "${firstMessage}". Would you like to approve it?`,
-                "Approve Plan",
-                "View Details",
-                "Dismiss"
-              )
-              .then((selection) => {
-                if (selection === "Approve Plan") {
-                  approvePlan(sessionId, context);
-                } else if (selection === "View Details") {
-                  activitiesChannel.show();
-                }
-              });
-          }
         }
         await context.globalState.update("currentSessionId", sessionId);
         await context.globalState.update("active-session-id", sessionId);
