@@ -126,14 +126,19 @@
           "group": "navigation@2"
         },
         {
-          "command": "jules-extension.openSettings",
+          "command": "jules-extension.listSources",
           "when": "view == julesSessionsView",
           "group": "navigation@3"
         },
         {
-          "command": "jules-extension.listSources",
+          "command": "jules-extension.openSettings",
           "when": "view == julesSessionsView",
           "group": "navigation@4"
+        },
+        {
+          "command": "jules-extension.setApiKey",
+          "when": "view == julesSessionsView",
+          "group": "navigation@5"
         }
       ],
       "view/item/context": [
