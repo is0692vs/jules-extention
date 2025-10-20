@@ -106,9 +106,7 @@ function buildFinalPrompt(userPrompt: string): string {
   const customPrompt = vscode.workspace
     .getConfiguration("jules-extension")
     .get<string>("customPrompt", "");
-  return customPrompt
-    ? `${customPrompt}\n\n${userPrompt}`
-    : userPrompt;
+  return customPrompt ? `${customPrompt}\n\n${userPrompt}` : userPrompt;
 }
 
 function resolveSessionId(
@@ -1212,7 +1210,7 @@ export function activate(context: vscode.ExtensionContext) {
   const openSettingsDisposable = vscode.commands.registerCommand(
     "jules-extension.openSettings",
     () => {
-      vscode.commands.executeCommand(
+      return vscode.commands.executeCommand(
         "workbench.action.openSettings",
         "@ext:HirokiMukai.jules-extension"
       );
