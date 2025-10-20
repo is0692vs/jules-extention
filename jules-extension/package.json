@@ -70,7 +70,8 @@
             "required": [
               "label",
               "prompt"
-            ]
+            ],
+            "additionalProperties": false
           }
         }
       }
