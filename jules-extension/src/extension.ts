@@ -102,6 +102,15 @@ async function getStoredApiKey(
   return apiKey;
 }
 
+function buildFinalPrompt(userPrompt: string): string {
+  const customPrompt = vscode.workspace
+    .getConfiguration("jules-extension")
+    .get<string>("customPrompts", "");
+  return customPrompt
+    ? `custom prompt: "${customPrompt}"\n\n${userPrompt}`
+    : userPrompt;
+}
+
 function resolveSessionId(
   context: vscode.ExtensionContext,
   target?: SessionTreeItem | string
@@ -729,22 +738,12 @@ async function sendMessageToSession(
       return;
     }
 
-    const trimmedPrompt = result.prompt.trim();
-    if (!trimmedPrompt) {
-      vscode.window.showWarningMessage("Message was empty and not sent.");
-      return;
-    }
     const userPrompt = result.prompt.trim();
     if (!userPrompt) {
       vscode.window.showWarningMessage("Message was empty and not sent.");
       return;
     }
-    const customPrompt = vscode.workspace
-      .getConfiguration("jules-extension")
-      .get<string>("customPrompts", "");
-    const finalPrompt = customPrompt
-      ? `custom prompt: "${customPrompt}"\n\n${userPrompt}`
-      : userPrompt;
+    const finalPrompt = buildFinalPrompt(userPrompt);
 
     await vscode.window.withProgress(
       {
@@ -972,13 +971,6 @@ export function activate(context: vscode.ExtensionContext) {
           return;
         }
 
-        const trimmedPrompt = result.prompt.trim();
-        if (!trimmedPrompt) {
-          vscode.window.showWarningMessage(
-            "Task description was empty. Session not created."
-          );
-          return;
-        }
         const userPrompt = result.prompt.trim();
         if (!userPrompt) {
           vscode.window.showWarningMessage(
@@ -986,12 +978,7 @@ export function activate(context: vscode.ExtensionContext) {
           );
           return;
         }
-        const customPrompt = vscode.workspace
-          .getConfiguration("jules-extension")
-          .get<string>("customPrompts", "");
-        const finalPrompt = customPrompt
-          ? `custom prompt: "${customPrompt}"\n\n${userPrompt}`
-          : userPrompt;
+        const finalPrompt = buildFinalPrompt(userPrompt);
         const title = userPrompt.split("\n")[0];
         const automationMode = result.createPR ? "AUTO_CREATE_PR" : "MANUAL";
         const requestBody: CreateSessionRequest = {

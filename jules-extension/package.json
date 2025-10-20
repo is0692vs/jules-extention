@@ -106,6 +106,7 @@
       {
         "command": "jules-extension.openSettings",
         "title": "Open Jules Settings",
+        "category": "Jules",
         "icon": "$(settings-gear)"
       }
     ],
