@@ -2,6 +2,9 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 
+// Constants
+const JULES_API_BASE_URL = "https://jules.googleapis.com/v1alpha";
+
 interface Source {
   name?: string;
   id?: string;
@@ -54,7 +57,7 @@ interface Session {
   // Add other fields if needed
 }
 
-function mapApiStateToSessionState(
+export function mapApiStateToSessionState(
   apiState: string
 ): "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED" {
   switch (apiState) {
@@ -116,17 +119,12 @@ function resolveSessionId(
   return (
     (typeof target === "string" ? target : undefined) ??
     (target instanceof SessionTreeItem ? target.session.name : undefined) ??
-    context.globalState.get<string>("active-session-id") ??
-    context.globalState.get<string>("currentSessionId")
+    context.globalState.get<string>("active-session-id")
   );
 }
 
-function extractPRUrl(session: Session): string | null {
-  return session.outputs?.find((o) => o.pullRequest)?.pullRequest?.url || null;
-}
-
-function extractPRUrlFromState(state: SessionState): string | null {
-  return state.outputs?.find((o) => o.pullRequest)?.pullRequest?.url || null;
+function extractPRUrl(sessionOrState: Session | SessionState): string | null {
+  return sessionOrState.outputs?.find((o) => o.pullRequest)?.pullRequest?.url || null;
 }
 
 function checkForCompletedSessions(currentSessions: Session[]): Session[] {
@@ -459,17 +457,21 @@ interface SessionsResponse {
   sessions: Session[];
 }
 
+interface Plan {
+  title?: string;
+  steps?: string[];
+}
+
 interface Activity {
   name: string;
   createTime: string;
   originator: "user" | "agent";
   id: string;
   type?: string;
-  planGenerated?: { plan: any };
+  planGenerated?: { plan: Plan };
   planApproved?: { planId: string };
   progressUpdated?: { title: string; description?: string };
-  sessionCompleted?: {};
-  // Other fields as needed
+  sessionCompleted?: Record<string, never>;
 }
 
 interface ActivitiesResponse {
@@ -541,7 +543,7 @@ class JulesSessionsProvider
     try {
       console.log("Jules: Fetching sessions in getChildren...");
       const response = await fetch(
-        "https://jules.googleapis.com/v1alpha/sessions",
+        `${JULES_API_BASE_URL}/sessions`,
         {
           method: "GET",
           headers: {
@@ -678,7 +680,7 @@ async function approvePlan(
       },
       async () => {
         const response = await fetch(
-          `https://jules.googleapis.com/v1alpha/${sessionId}:approvePlan`,
+          `${JULES_API_BASE_URL}/${sessionId}:approvePlan`,
           {
             method: "POST",
             headers: {
@@ -750,7 +752,7 @@ async function sendMessageToSession(
       },
       async () => {
         const response = await fetch(
-          `https://jules.googleapis.com/v1alpha/${sessionId}:sendMessage`,
+          `${JULES_API_BASE_URL}/${sessionId}:sendMessage`,
           {
             method: "POST",
             headers: {
@@ -773,7 +775,6 @@ async function sendMessageToSession(
     );
 
     await context.globalState.update("active-session-id", sessionId);
-    await context.globalState.update("currentSessionId", sessionId);
     await vscode.commands.executeCommand("jules-extension.refreshActivities");
   } catch (error) {
     const message =
@@ -806,11 +807,7 @@ function updateStatusBar(
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
-  console.log(
-    'Congratulations, your extension "jules-extension" is now active!'
-  );
+  console.log('Jules Extension is now active');
 
   const sessionsProvider = new JulesSessionsProvider(context);
   const sessionsTreeView = vscode.window.createTreeView("julesSessionsView", {
@@ -858,7 +855,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
       try {
         const response = await fetch(
-          "https://jules.googleapis.com/v1alpha/sources",
+          `${JULES_API_BASE_URL}/sources`,
           {
             method: "GET",
             headers: {
@@ -891,7 +888,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
       try {
         const response = await fetch(
-          "https://jules.googleapis.com/v1alpha/sources",
+          `${JULES_API_BASE_URL}/sources`,
           {
             method: "GET",
             headers: {
@@ -1003,7 +1000,7 @@ export function activate(context: vscode.ExtensionContext) {
               message: "Sending request...",
             });
             const response = await fetch(
-              "https://jules.googleapis.com/v1alpha/sessions",
+              `${JULES_API_BASE_URL}/sessions`,
               {
                 method: "POST",
                 headers: {
@@ -1083,7 +1080,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
       try {
         const sessionResponse = await fetch(
-          `https://jules.googleapis.com/v1alpha/${sessionId}`,
+          `${JULES_API_BASE_URL}/${sessionId}`,
           {
             method: "GET",
             headers: {
@@ -1101,7 +1098,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
         const session = (await sessionResponse.json()) as Session;
         const response = await fetch(
-          `https://jules.googleapis.com/v1alpha/${sessionId}/activities`,
+          `${JULES_API_BASE_URL}/${sessionId}/activities`,
           {
             method: "GET",
             headers: {
@@ -1157,7 +1154,6 @@ export function activate(context: vscode.ExtensionContext) {
             );
           });
         }
-        await context.globalState.update("currentSessionId", sessionId);
         await context.globalState.update("active-session-id", sessionId);
       } catch (error) {
         vscode.window.showErrorMessage(
@@ -1171,7 +1167,7 @@ export function activate(context: vscode.ExtensionContext) {
     "jules-extension.refreshActivities",
     async () => {
       const currentSessionId = context.globalState.get(
-        "currentSessionId"
+        "active-session-id"
       ) as string;
       if (!currentSessionId) {
         vscode.window.showErrorMessage(

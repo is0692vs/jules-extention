@@ -74,5 +74,3 @@ out/
 
 .gemini/
 gha-creds-*.json
-
-bin/を求めてください
