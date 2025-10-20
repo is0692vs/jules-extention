@@ -70,8 +70,7 @@
             "required": [
               "label",
               "prompt"
-            ],
-            "additionalProperties": false
+            ]
           }
         }
       }
@@ -119,11 +118,6 @@
         "title": "Approve Jules Plan",
         "category": "Jules",
         "icon": "$(check)"
-      },
-      {
-        "command": "jules-extension.openSettings",
-        "title": "Open Jules Settings",
-        "icon": "$(settings-gear)"
       }
     ],
     "views": {
@@ -139,29 +133,24 @@
     "menus": {
       "view/title": [
         {
-          "command": "jules-extension.createSession",
+          "command": "jules-extension.setApiKey",
           "when": "view == julesSessionsView",
           "group": "navigation@1"
         },
         {
-          "command": "jules-extension.refreshSessions",
+          "command": "jules-extension.listSources",
           "when": "view == julesSessionsView",
           "group": "navigation@2"
         },
         {
-          "command": "jules-extension.listSources",
+          "command": "jules-extension.createSession",
           "when": "view == julesSessionsView",
           "group": "navigation@3"
         },
         {
-          "command": "jules-extension.openSettings",
+          "command": "jules-extension.refreshSessions",
           "when": "view == julesSessionsView",
           "group": "navigation@4"
-        },
-        {
-          "command": "jules-extension.setApiKey",
-          "when": "view == julesSessionsView",
-          "group": "navigation@5"
         }
       ],
       "view/item/context": [

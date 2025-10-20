@@ -291,7 +291,7 @@ function getComposerHtml(
     options.customPrompts && options.customPrompts.length > 0
       ? `
     <div class="custom-prompts-container">
-      <select id="custom-prompts">
+      <select id="custom-prompts" aria-label="Custom prompts">
         <option value="">Select a custom prompt...</option>
         ${customPromptsOptions}
       </select>
@@ -351,9 +351,6 @@ function getComposerHtml(
     color: var(--vscode-input-foreground);
   }
 
-  select:focus {
-    outline: 1px solid var(--vscode-focusBorder);
-  }
   .actions {
     display: flex;
     justify-content: flex-end;
@@ -1232,16 +1229,6 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  const openSettingsDisposable = vscode.commands.registerCommand(
-    "jules-extension.openSettings",
-    () => {
-      vscode.commands.executeCommand(
-        "workbench.action.openSettings",
-        "@ext:HirokiMukai.jules-extension"
-      );
-    }
-  );
-
   context.subscriptions.push(
     setApiKeyDisposable,
     verifyApiKeyDisposable,
@@ -1252,8 +1239,7 @@ export function activate(context: vscode.ExtensionContext) {
     showActivitiesDisposable,
     refreshActivitiesDisposable,
     sendMessageDisposable,
-    approvePlanDisposable,
-    openSettingsDisposable
+    approvePlanDisposable
   );
 }
 
