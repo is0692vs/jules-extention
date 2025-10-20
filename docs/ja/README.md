@@ -2,9 +2,9 @@
 
 ![Jules Extension Icon](../jules-extension/icon.png)
 
-[![VSCode Extension](https://img.shields.io/badge/VSCode-Extension-blue.svg)](https://marketplace.visualstudio.com/items?itemName=YOUR_PUBLISHER.jules-extension)
-[![Status](https://img.shields.io/badge/status-development-yellow.svg)](#)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![VSCode Extension](https://img.shields.io/badge/VSCode-Extension-blue.svg)](https://marketplace.visualstudio.com/items?itemName=HirokiMukai.jules-extension)
+[![Status](https://img.shields.io/badge/status-active-brightgreen.svg)](#)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](../../../LICENSE)
 
 > "VSCode で Google Jules と共に、コーディングの未来を体験しよう"
 
@@ -41,7 +41,7 @@ Jules Extension は、Google の AI コーディングエージェント **Jules
 └──────────────────────────────┘
 ```
 
-_(これは UI のイメージです。実際の表示とは異なる場合があります。)_
+_(これはUIの概念を示すためのイメージです)_
 
 ## 📦 インストール
 
@@ -51,53 +51,37 @@ _(これは UI のイメージです。実際の表示とは異なる場合が�
 
 ### Marketplace から (推奨)
 
-1.  VSCode Marketplace で "Jules Extension" を検索
-2.  `Install` ボタンをクリック
+1.  VSCode Marketplace で "Jules Extension" を検索します。
+2.  `Install` ボタンをクリックします。
 
-## 🔑 API キーの取得
+## 🔑 API キーの取得と設定
 
-Jules Extension を使用するには、Jules API キーが必要です。以下の手順で取得してください：
+Jules Extension を使用するには、Jules API キーが必要です。
 
-1.  **アカウントの作成:**
+現在、Jules API は限定プレビュー版のため、公式ドキュメントやキーの取得方法は変更される可能性があります。利用可能な最新の情報源をご確認の上、APIキーを取得してください。
 
-    - [Jules 公式サイト](https://jules.google/docs)にアクセスします。
-    - 新しいアカウントを登録するか、既存のアカウントでログインします。
-
-2.  **API キーの生成:**
-
-    - アカウントのダッシュボードで「API キー」または「開発者設定」セクションに移動します。
-    - 「新しいシークレットキーを作成」をクリックします。
-    - キーに分かりやすい名前（例：「VSCode 拡張機能」）を付けて生成します。
-
-3.  **キーのコピー:**
-    - 新しい API キーが表示されます。クリップボードにコピーしてください。
-    - 後でキーを再度確認する必要がある場合は、Jules の設定ページでいつでも確認できます。
+取得したキーは、コマンドパレット (`Ctrl+Shift+P` または `Cmd+Shift+P`) から `> Jules: Set Jules API Key` を実行して設定します。
 
 > **重要:** API キーはパスワードのように扱ってください。公開したり、バージョン管理にコミットしたりしないでください。
 
-## クイックスタート
+## 🚀 クイックスタート
 
 1.  `Ctrl + Shift + P` (または `Cmd + Shift + P`) でコマンドパレットを開きます。
-2.  `> Jules: Set Jules API Key` を実行し、あなたの API キーを設定します。
+2.  `> Jules: Set Jules API Key` を実行し、取得した API キーを設定します。
 3.  サイドバーの `$(robot)` アイコンをクリックして、Jules Sessions View を開きます。
 4.  `> Jules: Create Jules Session` を実行して、最初のコーディングセッションを開始しましょう！
-
-## 📚 参考
-
-- [Jules 公式サイト](https://jules.google/docs)
-- [Jules API ドキュメント](https://developers.google.com/jules/api)
 
 ## 🤝 貢献 (Contribution)
 
 このプロジェクトはまだ始まったばかりです。バグ報告、機能提案、プルリクエストなど、あらゆる形の貢献を歓迎します！
 Issue Tracker や Pull Requests をご確認ください。
 
-## � リンク
+## 🔗 関連リンク
 
 - [Marketplace](https://marketplace.visualstudio.com/items?itemName=HirokiMukai.jules-extension)
-- [GitHub Repository](https://github.com/is0692vs/jules-extension.git)
+- [GitHub Repository](https://github.com/is0692vs/jules-extension)
 - [Report Issues](https://github.com/is0692vs/jules-extension/issues)
 
-## �📝 ライセンス
+## 📝 ライセンス
 
-[MIT](../../LICENSE)
+[MIT](../../../LICENSE)

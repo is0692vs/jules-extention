@@ -15,41 +15,13 @@ This document is available in the following languages:
 Jules Extension は、Google の AI コーディングエージェント **Jules** を VSCode 内から直接操作できる拡張機能です。
 あなたのコーディングワークフローに、インテリジェントな相棒を迎え入れましょう。
 
-## ✨ コンセプト
+詳細は、お使いの言語のドキュメントをご覧ください。
 
-この拡張機能は、あなたの開発体験を次のレベルへ引き上げるために生まれました。
+## 🚀 クイックスタート
 
-- **シームレスな統合:** いつもの VSCode 環境から離れることなく、Jules のパワフルな機能にアクセス。
-- **リアルタイム連携:** コーディングセッションの作成から進捗確認まで、すべてをリアルタイムで。
-- **生産性の飛躍:** 面倒なタスクは Jules に任せて、あなたは創造的な作業に集中できます。
-
-## 🚀 主要機能
-
-| 機能                   | 説明                                                                                                                                                                                              | コマンド / アイコン               |
-| :--------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :-------------------------------- |
-| **API キー設定**       | 初回利用時に、あなたの Jules アカウントに接続するための API キーを設定します。キーは VSCode の SecretStorage に安全に保管され、以降のすべてのリクエストで自動的に利用されます。                   | `jules-extension.setApiKey`       |
-| **セッション管理**     | `> Jules: Create Session` コマンドで、新しいコーディングタスクを Jules に依頼します。過去のセッションも一覧表示され、いつでも作業を再開したり、完了したタスクの履歴を確認したりできます。         | `jules-extension.createSession`   |
-| **リアルタイム監視**   | サイドバーに追加される専用ビューで、Jules の現在の作業状況（`Running`, `Active`, `Done`など）を一目で把握できます。もうブラウザとエディタを何度も行き来する必要はありません。                     | `julesSessionsView`               |
-| **進捗の更新**         | Jules の作業がどこまで進んだか気になったら、`↻`（更新）ボタンをクリック。セッションのステータスや Jules が実行した最新のアクティビティリストを瞬時に取得し、表示を更新します。                    | `jules-extension.refreshSessions` |
-| **アクティビティ表示** | セッションを選択すると、Jules が実行したコマンド、編集したファイル、思考プロセスなどの詳細なログを確認できます。まるで Jules の思考を覗き込んでいるかのような、透明性の高い開発体験を提供します。 | `jules-extension.showActivities`  |
-
-## 📦 インストール
-
-1. [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=HirokiMukai.jules-extension) から拡張機能をインストールしてください。
-
-または、VSCode 内で "Jules Extension" を検索してインストール。
-
-## クイックスタート
-
-1.  `Ctrl + Shift + P` (または `Cmd + Shift + P`) でコマンドパレットを開きます。
-2.  `> Jules: Set Jules API Key` を実行し、あなたの API キーを設定します。
-3.  サイドバーの `$(robot)` アイコンをクリックして、Jules Sessions View を開きます。
-4.  `> Jules: Create Jules Session` を実行して、最初のコーディングセッションを開始しましょう！
-
-## 📚 参考
-
-- [Jules 公式サイト](https://jules.google/docs)
-- [Jules API ドキュメント](https://developers.google.com/jules/api)
+1.  **インストール:** [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=HirokiMukai.jules-extension) から拡張機能をインストールします。
+2.  **APIキー設定:** コマンドパレット (`Ctrl+Shift+P`) から `> Jules: Set Jules API Key` を実行し、APIキーを設定します。
+3.  **セッション開始:** `> Jules: Create Jules Session` を実行して、最初のコーディングセッションを開始しましょう！
 
 ## 🤝 貢献 (Contribution)
 
@@ -59,7 +31,3 @@ Issue Tracker や Pull Requests をご確認ください。
 ## 📝 ライセンス
 
 [MIT](LICENSE)
-
-```
-
-```
