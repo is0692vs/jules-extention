@@ -140,9 +140,7 @@ function checkForCompletedSessions(currentSessions: Session[]): Session[] {
   return completedSessions;
 }
 
-function checkForPlansAwaitingApproval(
-  currentSessions: Session[]
-): Session[] {
+function checkForPlansAwaitingApproval(currentSessions: Session[]): Session[] {
   const sessionsAwaitingApproval: Session[] = [];
   for (const session of currentSessions) {
     const prevState = previousSessionStates.get(session.name);
@@ -285,8 +283,7 @@ async function showMessageComposer(
     panel.webview.onDidReceiveMessage((message) => {
       if (message?.type === "submit") {
         finalize({
-          prompt:
-            typeof message.value === "string" ? message.value : "",
+          prompt: typeof message.value === "string" ? message.value : "",
           createPR: !!message.createPR,
         });
         panel.dispose();
@@ -1151,7 +1148,6 @@ export function activate(context: vscode.ExtensionContext) {
               `${icon} ${timestamp} (${activity.originator}): ${message}`
             );
           });
-
         }
         await context.globalState.update("currentSessionId", sessionId);
         await context.globalState.update("active-session-id", sessionId);
@@ -1203,6 +1199,16 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  const openSettingsDisposable = vscode.commands.registerCommand(
+    "jules-extension.openSettings",
+    () => {
+      vscode.commands.executeCommand(
+        "workbench.action.openSettings",
+        "@ext:HirokiMukai.jules-extension"
+      );
+    }
+  );
+
   context.subscriptions.push(
     setApiKeyDisposable,
     verifyApiKeyDisposable,
@@ -1213,7 +1219,8 @@ export function activate(context: vscode.ExtensionContext) {
     showActivitiesDisposable,
     refreshActivitiesDisposable,
     sendMessageDisposable,
-    approvePlanDisposable
+    approvePlanDisposable,
+    openSettingsDisposable
   );
 }
 

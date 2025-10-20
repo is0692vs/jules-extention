@@ -50,6 +50,12 @@
           "default": 30,
           "minimum": 10,
           "description": "Auto-refresh interval in seconds (minimum: 10)"
+        },
+        "jules-extension.customPrompts": {
+          "type": "string",
+          "default": "",
+          "description": "A custom prompt to automatically prepend to every message sent to Jules. This acts as a persistent instruction.",
+          "markdownDescription": "Enter a custom prompt that will be automatically added to the beginning of every message you send to Jules. This is useful for providing persistent instructions or context.\n\n**Example:**\n`Always reply in Japanese.`"
         }
       }
     },
@@ -96,6 +102,11 @@
         "title": "Approve Jules Plan",
         "category": "Jules",
         "icon": "$(check)"
+      },
+      {
+        "command": "jules-extension.openSettings",
+        "title": "Open Jules Settings",
+        "icon": "$(settings-gear)"
       }
     ],
     "views": {
@@ -111,7 +122,7 @@
     "menus": {
       "view/title": [
         {
-          "command": "jules-extension.setApiKey",
+          "command": "jules-extension.createSession",
           "when": "view == julesSessionsView",
           "group": "navigation@1"
         },
@@ -121,14 +132,19 @@
           "group": "navigation@2"
         },
         {
-          "command": "jules-extension.createSession",
+          "command": "jules-extension.refreshSessions",
           "when": "view == julesSessionsView",
           "group": "navigation@3"
         },
         {
-          "command": "jules-extension.refreshSessions",
+          "command": "jules-extension.openSettings",
           "when": "view == julesSessionsView",
           "group": "navigation@4"
+        },
+        {
+          "command": "jules-extension.setApiKey",
+          "when": "view == julesSessionsView",
+          "group": "navigation@5"
         }
       ],
       "view/item/context": [
