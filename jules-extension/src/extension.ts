@@ -199,6 +199,12 @@ function resetAutoRefresh(
   startAutoRefresh(context, sessionsProvider);
 }
 
+function getCustomPrompts(): CustomPrompt[] {
+  return vscode.workspace
+    .getConfiguration("jules-extension")
+    .get<CustomPrompt[]>("customPrompts", []);
+}
+
 interface CustomPrompt {
   label: string;
   prompt: string;
@@ -709,9 +715,7 @@ async function sendMessageToSession(
   }
 
   try {
-    const customPrompts = vscode.workspace
-      .getConfiguration("jules-extension")
-      .get<CustomPrompt[]>("customPrompts", []);
+    const customPrompts = getCustomPrompts();
     const result = await showMessageComposer({
       title: "Send Message to Jules",
       placeholder: "What would you like Jules to do?",
@@ -944,9 +948,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       try {
-        const customPrompts = vscode.workspace
-          .getConfiguration("jules-extension")
-          .get<CustomPrompt[]>("customPrompts", []);
+        const customPrompts = getCustomPrompts();
         const result = await showMessageComposer({
           title: "Create Jules Session",
           placeholder: "Describe the task you want Jules to tackle...",
