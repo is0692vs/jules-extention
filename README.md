@@ -60,6 +60,8 @@ Issue Tracker や Pull Requests をご確認ください。
 
 [MIT](LICENSE)
 
+¡Hola, mundo! Este es un cambio de prueba sin sentido.
+
 ```
 
 ```
