@@ -1229,6 +1229,16 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  const openSettingsDisposable = vscode.commands.registerCommand(
+    "jules-extension.openSettings",
+    () => {
+      vscode.commands.executeCommand(
+        "workbench.action.openSettings",
+        "@ext:HirokiMukai.jules-extension"
+      );
+    }
+  );
+
   context.subscriptions.push(
     setApiKeyDisposable,
     verifyApiKeyDisposable,
@@ -1239,7 +1249,8 @@ export function activate(context: vscode.ExtensionContext) {
     showActivitiesDisposable,
     refreshActivitiesDisposable,
     sendMessageDisposable,
-    approvePlanDisposable
+    approvePlanDisposable,
+    openSettingsDisposable
   );
 }
 
