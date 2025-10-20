@@ -498,10 +498,7 @@ class JulesSessionsProvider
     vscode.TreeItem | undefined | null | void
   > = this._onDidChangeTreeData.event;
 
-  constructor(
-    private context: vscode.ExtensionContext,
-    private statusBarItem: vscode.StatusBarItem
-  ) {}
+  constructor(private context: vscode.ExtensionContext) {}
 
   refresh(): void {
     console.log("Jules: refresh() called, firing event.");
@@ -551,18 +548,11 @@ class JulesSessionsProvider
       );
 
       if (!response.ok) {
-        const errorMsg = `API Error: ${response.status} ${response.statusText}`;
+        const errorMsg = `Failed to fetch sessions: ${response.status} ${response.statusText}`;
         console.error(`Jules: ${errorMsg}`);
-        this.statusBarItem.text = "$(error) Jules: Refresh failed";
-        this.statusBarItem.tooltip = `Failed to fetch sessions. ${errorMsg}. Click to retry.`;
-        this.statusBarItem.backgroundColor = new vscode.ThemeColor(
-          "statusBarItem.errorBackground"
-        );
+        vscode.window.showErrorMessage(errorMsg);
         return [];
       }
-
-      // 正常に戻った場合はステータスバーを元に戻す
-      updateStatusBar(this.context, this.statusBarItem);
 
       const data = (await response.json()) as SessionsResponse;
       if (!data.sessions || !Array.isArray(data.sessions)) {
@@ -628,16 +618,9 @@ class JulesSessionsProvider
 
       return filteredSessions.map((session) => new SessionTreeItem(session));
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      console.error(
-        "Jules: Error fetching sessions in getChildren:",
-        errorMsg
-      );
-      this.statusBarItem.text = "$(error) Jules: Refresh failed";
-      this.statusBarItem.tooltip = `Failed to fetch sessions: ${errorMsg}. Click to retry.`;
-      this.statusBarItem.backgroundColor = new vscode.ThemeColor(
-        "statusBarItem.errorBackground"
-      );
+      const errorMsg = `Failed to fetch sessions: ${error}`;
+      console.error("Jules: Error fetching sessions in getChildren:", error);
+      vscode.window.showErrorMessage(errorMsg);
       return [];
     }
   }
@@ -824,6 +807,13 @@ export function activate(context: vscode.ExtensionContext) {
     'Congratulations, your extension "jules-extension" is now active!'
   );
 
+  const sessionsProvider = new JulesSessionsProvider(context);
+  const sessionsTreeView = vscode.window.createTreeView("julesSessionsView", {
+    treeDataProvider: sessionsProvider,
+    showCollapseAll: false,
+  });
+  console.log("Jules: TreeView created");
+
   // ステータスバーアイテム作成
   const statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
@@ -834,13 +824,6 @@ export function activate(context: vscode.ExtensionContext) {
 
   // 初期表示を更新
   updateStatusBar(context, statusBarItem);
-
-  const sessionsProvider = new JulesSessionsProvider(context, statusBarItem);
-  const sessionsTreeView = vscode.window.createTreeView("julesSessionsView", {
-    treeDataProvider: sessionsProvider,
-    showCollapseAll: false,
-  });
-  console.log("Jules: TreeView created");
 
   // Create OutputChannel for Activities
   const activitiesChannel =

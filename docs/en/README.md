@@ -2,7 +2,7 @@
 
 ![Jules Extension Icon](../jules-extension/icon.png)
 
-[![VSCode Extension](https://img.shields.io/badge/VSCode-Extension-blue.svg)](https://marketplace.visualstudio.com/items?itemName=HirokiMukai.jules-extension)
+[![VSCode Extension](https://img.shields.io/badge/VSCode-Extension-blue.svg)](https://marketplace.visualstudio.com/items?itemName=YOUR_PUBLISHER.jules-extension)
 [![Status](https://img.shields.io/badge/status-development-yellow.svg)](#)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -59,7 +59,7 @@ Or search for "Jules Extension" in VS Code Extensions view.
 If you want to try the latest features that are not yet published on the Marketplace, you can download and install the `.vsix` file directly from the releases page.
 
 1.  **Go to the Releases Page:**
-    Visit [GitHub Releases](https://github.com/is0692vs/jules-extension/releases) and find the latest release version.
+    Visit [GitHub Releases](https://github.com/your-repo/jules-extension/releases) and find the latest release version.
 
 2.  **Download the VSIX File:**
     Download the `.vsix` file (e.g., `jules-extension-0.1.0.vsix`) from the `Assets`.

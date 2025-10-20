@@ -2,7 +2,7 @@
 
 ![Jules Extension Icon](../jules-extension/icon.png)
 
-[![VSCode Extension](https://img.shields.io/badge/VSCode-Extension-blue.svg)](https://marketplace.visualstudio.com/items?itemName=HirokiMukai.jules-extension)
+[![VSCode Extension](https://img.shields.io/badge/VSCode-Extension-blue.svg)](https://marketplace.visualstudio.com/items?itemName=YOUR_PUBLISHER.jules-extension)
 [![Status](https://img.shields.io/badge/status-development-yellow.svg)](#)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -59,7 +59,7 @@ _(이것은 UI 컨셉입니다. 실제 디스플레이는 다를 수 있습니�
 마켓플레이스에 아직 게시되지 않은 최신 기능을 사용해 보려면 릴리스 페이지에서 `.vsix` 파일을 직접 다운로드하여 설치할 수 있습니다.
 
 1.  **릴리스 페이지로 이동:**
-    [GitHub 릴리스](https://github.com/is0692vs/jules-extension/releases)를 방문하여 최신 릴리스 버전을 찾습니다.
+    [GitHub 릴리스](https://github.com/your-repo/jules-extension/releases)를 방문하여 최신 릴리스 버전을 찾습니다.
 
 2.  **VSIX 파일 다운로드:**
     `Assets`에서 `.vsix` 파일(예: `jules-extension-0.1.0.vsix`)을 다운로드합니다.

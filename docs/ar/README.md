@@ -2,7 +2,7 @@
 
 ![Jules Extension Icon](../jules-extension/icon.png)
 
-[![VSCode Extension](https://img.shields.io/badge/VSCode-Extension-blue.svg)](https://marketplace.visualstudio.com/items?itemName=HirokiMukai.jules-extension)
+[![VSCode Extension](https://img.shields.io/badge/VSCode-Extension-blue.svg)](https://marketplace.visualstudio.com/items?itemName=YOUR_PUBLISHER.jules-extension)
 [![Status](https://img.shields.io/badge/status-development-yellow.svg)](#)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -59,7 +59,7 @@ _(هذا تصور لواجهة المستخدم. قد يختلف العرض ال
 إذا كنت ترغب في تجربة أحدث الميزات التي لم يتم نشرها بعد في Marketplace، يمكنك تنزيل ملف `.vsix` وتثبيته مباشرة من صفحة الإصدارات.
 
 1.  **اذهب إلى صفحة الإصدارات:**
-    قم بزيارة [إصدارات GitHub](https://github.com/is0692vs/jules-extension/releases) وابحث عن أحدث إصدار.
+    قم بزيارة [إصدارات GitHub](https://github.com/your-repo/jules-extension/releases) وابحث عن أحدث إصدار.
 
 2.  **تنزيل ملف VSIX:**
     قم بتنزيل ملف `.vsix` (على سبيل المثال، `jules-extension-0.1.0.vsix`) من قسم `Assets`.
