@@ -107,7 +107,7 @@ function buildFinalPrompt(userPrompt: string): string {
     .getConfiguration("jules-extension")
     .get<string>("customPrompts", "");
   return customPrompt
-    ? `custom prompt: "${customPrompt}"\n\n${userPrompt}`
+    ? `${customPrompt}\n\n${userPrompt}`
     : userPrompt;
 }
 
