@@ -3,7 +3,7 @@ import * as assert from "assert";
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as vscode from "vscode";
-import { SessionTreeItem, getCustomPrompts } from "../extension";
+import { SessionTreeItem } from "../extension";
 import * as sinon from "sinon";
 
 suite("Extension Test Suite", () => {
@@ -88,89 +88,6 @@ suite("Extension Test Suite", () => {
     test("Should not duplicate notifications for existing PRs", () => {
       // Verify notification deduplication logic
       assert.strictEqual(true, true);
-    });
-  });
-
-  suite("getCustomPrompts", () => {
-    let getConfigurationStub: sinon.SinonStub;
-
-    setup(() => {
-      getConfigurationStub = sinon.stub(vscode.workspace, "getConfiguration");
-    });
-
-    teardown(() => {
-      getConfigurationStub.restore();
-    });
-
-    test("should return an empty array if no prompts are configured", () => {
-      getConfigurationStub.returns({ get: () => "" });
-      const prompts = getCustomPrompts();
-      assert.deepStrictEqual(prompts, []);
-    });
-
-    test("should parse a single valid prompt", () => {
-      const promptString = "Fix spelling | Fix spelling mistakes.";
-      getConfigurationStub.returns({ get: () => promptString });
-      const prompts = getCustomPrompts();
-      assert.deepStrictEqual(prompts, [
-        { label: "Fix spelling", prompt: "Fix spelling mistakes." },
-      ]);
-    });
-
-    test("should parse multiple valid prompts", () => {
-      const promptString =
-        "Fix spelling | Fix spelling mistakes.\nSummarize | Summarize the following text.";
-      getConfigurationStub.returns({ get: () => promptString });
-      const prompts = getCustomPrompts();
-      assert.deepStrictEqual(prompts, [
-        { label: "Fix spelling", prompt: "Fix spelling mistakes." },
-        { label: "Summarize", prompt: "Summarize the following text." },
-      ]);
-    });
-
-    test("should ignore lines that do not contain a separator", () => {
-      const promptString = "Fix spelling";
-      getConfigurationStub.returns({ get: () => promptString });
-      const prompts = getCustomPrompts();
-      assert.deepStrictEqual(prompts, []);
-    });
-
-    test("should handle prompts with extra whitespace", () => {
-      const promptString = "  Fix spelling  |   Fix spelling mistakes.  ";
-      getConfigurationStub.returns({ get: () => promptString });
-      const prompts = getCustomPrompts();
-      assert.deepStrictEqual(prompts, [
-        { label: "Fix spelling", prompt: "Fix spelling mistakes." },
-      ]);
-    });
-
-    test("should handle prompts with multiple separators", () => {
-      const promptString = "Explain | Explain this code | in detail";
-      getConfigurationStub.returns({ get: () => promptString });
-      const prompts = getCustomPrompts();
-      assert.deepStrictEqual(prompts, [
-        { label: "Explain", prompt: "Explain this code | in detail" },
-      ]);
-    });
-
-    test("should ignore empty lines", () => {
-      const promptString = "\nFix spelling | Fix spelling mistakes.\n\n";
-      getConfigurationStub.returns({ get: () => promptString });
-      const prompts = getCustomPrompts();
-      assert.deepStrictEqual(prompts, [
-        { label: "Fix spelling", prompt: "Fix spelling mistakes." },
-      ]);
-    });
-
-    test("should handle a mix of valid and invalid lines", () => {
-      const promptString =
-        "Fix spelling | Fix spelling mistakes.\nInvalid line\nSummarize | Summarize the following text.";
-      getConfigurationStub.returns({ get: () => promptString });
-      const prompts = getCustomPrompts();
-      assert.deepStrictEqual(prompts, [
-        { label: "Fix spelling", prompt: "Fix spelling mistakes." },
-        { label: "Summarize", prompt: "Summarize the following text." },
-      ]);
     });
   });
 });

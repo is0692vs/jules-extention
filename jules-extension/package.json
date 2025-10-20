@@ -54,8 +54,8 @@
         "jules-extension.customPrompts": {
           "type": "string",
           "default": "",
-          "description": "Custom prompts for the message composer. Each prompt on a new line: 'Label | Prompt'. Example: 'Fix spelling | Fix spelling mistakes.'",
-          "markdownDescription": "Custom prompts to be used in the message composer. Each prompt should be on a new line in the format `Label | Prompt Text`.\n\n**Example:**\n```\nFix spelling | Fix spelling and grammar mistakes in the selected text.\nSummarize | Summarize the following text.\n```"
+          "description": "A custom prompt to automatically prepend to every message sent to Jules. This acts as a persistent instruction.",
+          "markdownDescription": "Enter a custom prompt that will be automatically added to the beginning of every message you send to Jules. This is useful for providing persistent instructions or context.\n\n**Example:**\n`Always reply in Japanese.`"
         }
       }
     },
@@ -163,7 +163,6 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
-    "@types/sinon": "^17.0.4",
     "@types/vscode": "^1.105.0",
     "@typescript-eslint/eslint-plugin": "^8.45.0",
     "@typescript-eslint/parser": "^8.45.0",
@@ -172,7 +171,6 @@
     "esbuild": "^0.25.10",
     "eslint": "^9.36.0",
     "npm-run-all": "^4.1.5",
-    "sinon": "^21.0.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {

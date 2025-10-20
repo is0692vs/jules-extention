@@ -199,32 +199,6 @@ function resetAutoRefresh(
   startAutoRefresh(context, sessionsProvider);
 }
 
-export function getCustomPrompts(): CustomPrompt[] {
-  const promptsString = vscode.workspace
-    .getConfiguration("jules-extension")
-    .get<string>("customPrompts", "");
-
-  if (!promptsString) {
-    return [];
-  }
-
-  return promptsString
-    .split("\n")
-    .map((line) => {
-      const parts = line.split("|");
-      if (parts.length < 2) {
-        return null;
-      }
-      const label = parts[0].trim();
-      const prompt = parts.slice(1).join("|").trim();
-      if (!label || !prompt) {
-        return null;
-      }
-      return { label, prompt };
-    })
-    .filter((p): p is CustomPrompt => p !== null);
-}
-
 interface CustomPrompt {
   label: string;
   prompt: string;
@@ -235,7 +209,6 @@ interface ComposerOptions {
   placeholder?: string;
   value?: string;
   showCreatePrCheckbox?: boolean;
-  customPrompts?: CustomPrompt[];
 }
 
 interface ComposerResult {
@@ -304,26 +277,6 @@ function getComposerHtml(
     </div>
   `
     : "";
-  const customPromptsOptions =
-    options.customPrompts
-      ?.map(
-        (p) =>
-          `<option value="${escapeAttribute(p.prompt)}">${escapeHtml(
-            p.label
-          )}</option>`
-      )
-      .join("") ?? "";
-  const customPromptsSelect =
-    options.customPrompts && options.customPrompts.length > 0
-      ? `
-    <div class="custom-prompts-container">
-      <select id="custom-prompts" aria-label="Custom prompts">
-        <option value="">Select a custom prompt...</option>
-        ${customPromptsOptions}
-      </select>
-    </div>
-  `
-      : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -364,19 +317,6 @@ function getComposerHtml(
     outline: 1px solid var(--vscode-focusBorder);
   }
 
-  .custom-prompts-container {
-    margin-bottom: 16px;
-  }
-
-  select {
-    width: 100%;
-    padding: 8px;
-    border-radius: 4px;
-    border: 1px solid var(--vscode-input-border);
-    background: var(--vscode-input-background);
-    color: var(--vscode-input-foreground);
-  }
-
   .actions {
     display: flex;
     justify-content: flex-end;
@@ -412,7 +352,6 @@ function getComposerHtml(
 </style>
 </head>
 <body>
-  ${customPromptsSelect}
   <textarea id="message" placeholder="${placeholder}" autofocus>${value}</textarea>
   <div class="actions">
     ${createPrCheckbox}
@@ -423,7 +362,6 @@ function getComposerHtml(
     const vscode = acquireVsCodeApi();
     const textarea = document.getElementById('message');
     const createPrCheckbox = document.getElementById('create-pr');
-    const customPromptsSelect = document.getElementById('custom-prompts');
 
     const submit = () => {
       vscode.postMessage({
@@ -432,14 +370,6 @@ function getComposerHtml(
         createPR: createPrCheckbox ? createPrCheckbox.checked : false,
       });
     };
-
-    if (customPromptsSelect) {
-      customPromptsSelect.addEventListener('change', (event) => {
-        if (event.target.value) {
-          textarea.value = event.target.value;
-        }
-      });
-    }
 
     document.getElementById('submit').addEventListener('click', submit);
     document.getElementById('cancel').addEventListener('click', () => {
@@ -735,11 +665,9 @@ async function sendMessageToSession(
   }
 
   try {
-    const customPrompts = getCustomPrompts();
     const result = await showMessageComposer({
       title: "Send Message to Jules",
       placeholder: "What would you like Jules to do?",
-      customPrompts,
     });
 
     if (result === undefined) {
@@ -747,11 +675,19 @@ async function sendMessageToSession(
       return;
     }
 
-    const trimmedPrompt = result.prompt.trim();
-    if (!trimmedPrompt) {
+    const userPrompt = result.prompt.trim();
+    if (!userPrompt) {
       vscode.window.showWarningMessage("Message was empty and not sent.");
       return;
     }
+
+    const customPrompt = vscode.workspace
+      .getConfiguration("jules-extension")
+      .get<string>("customPrompts", "");
+
+    const finalPrompt = customPrompt
+      ? `${customPrompt}\n\n${userPrompt}`
+      : userPrompt;
 
     await vscode.window.withProgress(
       {
@@ -767,7 +703,7 @@ async function sendMessageToSession(
               "Content-Type": "application/json",
               "X-Goog-Api-Key": apiKey,
             },
-            body: JSON.stringify({ prompt: trimmedPrompt }),
+            body: JSON.stringify({ prompt: finalPrompt }),
           }
         );
 
@@ -968,12 +904,10 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       try {
-        const customPrompts = getCustomPrompts();
         const result = await showMessageComposer({
           title: "Create Jules Session",
           placeholder: "Describe the task you want Jules to tackle...",
           showCreatePrCheckbox: true,
-          customPrompts,
         });
 
         if (result === undefined) {
@@ -981,18 +915,26 @@ export function activate(context: vscode.ExtensionContext) {
           return;
         }
 
-        const trimmedPrompt = result.prompt.trim();
-        if (!trimmedPrompt) {
+        const userPrompt = result.prompt.trim();
+        if (!userPrompt) {
           vscode.window.showWarningMessage(
             "Task description was empty. Session not created."
           );
           return;
         }
 
-        const title = trimmedPrompt.split("\n")[0];
+        const customPrompt = vscode.workspace
+          .getConfiguration("jules-extension")
+          .get<string>("customPrompts", "");
+
+        const finalPrompt = customPrompt
+          ? `${customPrompt}\n\n${userPrompt}`
+          : userPrompt;
+
+        const title = userPrompt.split("\n")[0];
         const automationMode = result.createPR ? "AUTO_CREATE_PR" : "MANUAL";
         const requestBody: CreateSessionRequest = {
-          prompt: trimmedPrompt,
+          prompt: finalPrompt,
           sourceContext: {
             source: selectedSource.name || selectedSource.id || "",
             githubRepoContext: {
