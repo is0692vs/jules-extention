@@ -3,7 +3,7 @@ import * as assert from "assert";
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as vscode from "vscode";
-import { SessionTreeItem } from "../extension";
+import { SessionTreeItem, mapApiStateToSessionState } from "../extension";
 
 suite("Extension Test Suite", () => {
   vscode.window.showInformationMessage("Start all tests.");
@@ -16,55 +16,68 @@ suite("Extension Test Suite", () => {
   // Tests for mapApiStateToSessionState function behavior
   suite("API State Mapping", () => {
     test("PLANNING should map to RUNNING", () => {
-      // This test documents the expected behavior where PLANNING state
-      // maps to RUNNING to prevent plan-only sessions from appearing as COMPLETED
-      assert.strictEqual(true, true);
+      assert.strictEqual(mapApiStateToSessionState("PLANNING"), "RUNNING");
     });
 
     test("AWAITING_PLAN_APPROVAL should map to RUNNING", () => {
-      // Sessions waiting for plan approval should display as RUNNING
-      // not COMPLETED in the sidebar UI
-      assert.strictEqual(true, true);
+      assert.strictEqual(mapApiStateToSessionState("AWAITING_PLAN_APPROVAL"), "RUNNING");
     });
 
     test("AWAITING_USER_FEEDBACK should map to RUNNING", () => {
-      assert.strictEqual(true, true);
+      assert.strictEqual(mapApiStateToSessionState("AWAITING_USER_FEEDBACK"), "RUNNING");
     });
 
     test("IN_PROGRESS should map to RUNNING", () => {
-      assert.strictEqual(true, true);
+      assert.strictEqual(mapApiStateToSessionState("IN_PROGRESS"), "RUNNING");
+    });
+
+    test("QUEUED should map to RUNNING", () => {
+      assert.strictEqual(mapApiStateToSessionState("QUEUED"), "RUNNING");
+    });
+
+    test("STATE_UNSPECIFIED should map to RUNNING", () => {
+      assert.strictEqual(mapApiStateToSessionState("STATE_UNSPECIFIED"), "RUNNING");
     });
 
     test("COMPLETED API state should map to COMPLETED UI state", () => {
-      assert.strictEqual(true, true);
+      assert.strictEqual(mapApiStateToSessionState("COMPLETED"), "COMPLETED");
     });
 
     test("FAILED API state should map to FAILED UI state", () => {
-      assert.strictEqual(true, true);
+      assert.strictEqual(mapApiStateToSessionState("FAILED"), "FAILED");
     });
 
     test("CANCELLED API state should map to CANCELLED UI state", () => {
-      assert.strictEqual(true, true);
+      assert.strictEqual(mapApiStateToSessionState("CANCELLED"), "CANCELLED");
+    });
+
+    test("PAUSED API state should map to CANCELLED UI state", () => {
+      assert.strictEqual(mapApiStateToSessionState("PAUSED"), "CANCELLED");
     });
 
     test("Unknown states should default to RUNNING", () => {
-      // Ensures graceful handling of unexpected API states
-      assert.strictEqual(true, true);
+      assert.strictEqual(mapApiStateToSessionState("UNKNOWN_STATE"), "RUNNING");
+      assert.strictEqual(mapApiStateToSessionState(""), "RUNNING");
     });
   });
 
   suite("Session Tree Item", () => {
     test("SessionTreeItem should display correct icons based on state", () => {
-      // RUNNING -> sync~spin
-      // COMPLETED -> check
-      // FAILED -> error
-      // CANCELLED -> close
-      assert.strictEqual(true, true);
-    });
+      const runningItem = new SessionTreeItem({
+        name: "sessions/123",
+        title: "Test Session",
+        state: "RUNNING",
+        rawState: "IN_PROGRESS",
+      } as any);
+      assert.ok(runningItem.iconPath);
 
-    test("SessionTreeItem should use mapped state for display", () => {
-      // Verify that UI displays the mapped state, not the raw API state
-      assert.strictEqual(true, true);
+      const completedItem = new SessionTreeItem({
+        name: "sessions/456",
+        title: "Completed Session",
+        state: "COMPLETED",
+        rawState: "COMPLETED",
+      } as any);
+      assert.ok(completedItem.iconPath);
     });
 
     test("SessionTreeItem exposes context value for view menus", () => {
@@ -72,21 +85,23 @@ suite("Extension Test Suite", () => {
         name: "sessions/123",
         title: "Test Session",
         state: "RUNNING",
+        rawState: "IN_PROGRESS",
       } as any);
 
       assert.strictEqual(item.contextValue, "jules-session");
     });
-  });
 
-  suite("Session Notifications", () => {
-    test("Should notify when PR is created (session transitions to COMPLETED)", () => {
-      // Verify that notifications are only sent when a PR is newly created
-      assert.strictEqual(true, true);
-    });
+    test("SessionTreeItem should have proper command", () => {
+      const item = new SessionTreeItem({
+        name: "sessions/789",
+        title: "Test Session",
+        state: "RUNNING",
+        rawState: "IN_PROGRESS",
+      } as any);
 
-    test("Should not duplicate notifications for existing PRs", () => {
-      // Verify notification deduplication logic
-      assert.strictEqual(true, true);
+      assert.ok(item.command);
+      assert.strictEqual(item.command?.command, "jules-extension.showActivities");
+      assert.strictEqual(item.command?.arguments?.[0], "sessions/789");
     });
   });
 });

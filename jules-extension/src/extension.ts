@@ -54,7 +54,7 @@ interface Session {
   // Add other fields if needed
 }
 
-function mapApiStateToSessionState(
+export function mapApiStateToSessionState(
   apiState: string
 ): "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED" {
   switch (apiState) {
@@ -116,8 +116,7 @@ function resolveSessionId(
   return (
     (typeof target === "string" ? target : undefined) ??
     (target instanceof SessionTreeItem ? target.session.name : undefined) ??
-    context.globalState.get<string>("active-session-id") ??
-    context.globalState.get<string>("currentSessionId")
+    context.globalState.get<string>("active-session-id")
   );
 }
 
@@ -459,17 +458,21 @@ interface SessionsResponse {
   sessions: Session[];
 }
 
+interface Plan {
+  title?: string;
+  steps?: string[];
+}
+
 interface Activity {
   name: string;
   createTime: string;
   originator: "user" | "agent";
   id: string;
   type?: string;
-  planGenerated?: { plan: any };
+  planGenerated?: { plan: Plan };
   planApproved?: { planId: string };
   progressUpdated?: { title: string; description?: string };
-  sessionCompleted?: {};
-  // Other fields as needed
+  sessionCompleted?: Record<string, never>;
 }
 
 interface ActivitiesResponse {
@@ -773,7 +776,6 @@ async function sendMessageToSession(
     );
 
     await context.globalState.update("active-session-id", sessionId);
-    await context.globalState.update("currentSessionId", sessionId);
     await vscode.commands.executeCommand("jules-extension.refreshActivities");
   } catch (error) {
     const message =
@@ -806,11 +808,7 @@ function updateStatusBar(
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
-  console.log(
-    'Congratulations, your extension "jules-extension" is now active!'
-  );
+  console.log('Jules Extension is now active');
 
   const sessionsProvider = new JulesSessionsProvider(context);
   const sessionsTreeView = vscode.window.createTreeView("julesSessionsView", {
@@ -1157,7 +1155,6 @@ export function activate(context: vscode.ExtensionContext) {
             );
           });
         }
-        await context.globalState.update("currentSessionId", sessionId);
         await context.globalState.update("active-session-id", sessionId);
       } catch (error) {
         vscode.window.showErrorMessage(
@@ -1171,7 +1168,7 @@ export function activate(context: vscode.ExtensionContext) {
     "jules-extension.refreshActivities",
     async () => {
       const currentSessionId = context.globalState.get(
-        "currentSessionId"
+        "active-session-id"
       ) as string;
       if (!currentSessionId) {
         vscode.window.showErrorMessage(
