@@ -686,7 +686,7 @@ async function sendMessageToSession(
       .get<string>("customPrompts", "");
 
     const finalPrompt = customPrompt
-      ? `${customPrompt}\n\n${userPrompt}`
+      ? `custom prompt: "${customPrompt}"\n\n${userPrompt}`
       : userPrompt;
 
     await vscode.window.withProgress(
@@ -928,7 +928,7 @@ export function activate(context: vscode.ExtensionContext) {
           .get<string>("customPrompts", "");
 
         const finalPrompt = customPrompt
-          ? `${customPrompt}\n\n${userPrompt}`
+          ? `custom prompt: "${customPrompt}"\n\n${userPrompt}`
           : userPrompt;
 
         const title = userPrompt.split("\n")[0];
