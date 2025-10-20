@@ -15,13 +15,20 @@
     "theme": "dark"
   },
   "keywords": [
-    "jules",
-    "google",
+    "Jules",
+    "coding-agent",
+    "LLM",
     "ai",
+    "vscode-extension",
+    "productivity",
+    "automation",
+    "google",
+    "development-tools",
+    "artificial-intelligence",
     "coding-assistant",
-    "gemini",
     "code-agent",
-    "ai-agent"
+    "ai-agent",
+    "gemini"
   ],
   "engines": {
     "vscode": "^1.105.0"
