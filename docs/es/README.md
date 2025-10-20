@@ -98,6 +98,11 @@ Para usar la Extensión de Jules, necesitas una clave de API de Jules. Sigue est
 3.  Haz clic en el icono `$(robot)` en la barra lateral para abrir la Vista de Sesiones de Jules.
 4.  Ejecuta `> Jules: Create Jules Session` para iniciar tu primera sesión de codificación.
 
+## 📚 Referencias
+
+- [Sitio Web Oficial de Jules](https://jules.google/docs)
+- [Documentación de la API de Jules](https://developers.google.com/jules/api)
+
 ## ⚠️ Notas Importantes
 
 - **Renderización de Bloques de Tarjetas:** Al utilizar funciones que se muestran como bloques de tarjetas, ten en cuenta la estructura del contenido para asegurar que se renderice correctamente.
