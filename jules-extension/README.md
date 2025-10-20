@@ -124,6 +124,8 @@ This extension contributes the following settings:
 This project is just getting started. We welcome all forms of contribution, including bug reports, feature suggestions, and pull requests!
 Please check the Issue Tracker and Pull Requests.
 
+<!-- Este es un comentario de prueba. -->
+
 ## 📝 License
 
 [MIT](LICENSE)
