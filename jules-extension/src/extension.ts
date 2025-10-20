@@ -199,8 +199,13 @@ function resetAutoRefresh(
   startAutoRefresh(context, sessionsProvider);
 }
 
+interface CustomPrompt {
+  label: string;
+  prompt: string;
+}
+
 interface ComposerOptions {
-  title: string;
+  title:string;
   placeholder?: string;
   value?: string;
   showCreatePrCheckbox?: boolean;
@@ -357,6 +362,7 @@ function getComposerHtml(
     const vscode = acquireVsCodeApi();
     const textarea = document.getElementById('message');
     const createPrCheckbox = document.getElementById('create-pr');
+
     const submit = () => {
       vscode.postMessage({
         type: 'submit',
@@ -686,11 +692,19 @@ async function sendMessageToSession(
       return;
     }
 
-    const trimmedPrompt = result.prompt.trim();
-    if (!trimmedPrompt) {
+    const userPrompt = result.prompt.trim();
+    if (!userPrompt) {
       vscode.window.showWarningMessage("Message was empty and not sent.");
       return;
     }
+
+    const customPrompt = vscode.workspace
+      .getConfiguration("jules-extension")
+      .get<string>("customPrompts", "");
+
+    const finalPrompt = customPrompt
+      ? `custom prompt: "${customPrompt}"\n\n${userPrompt}`
+      : userPrompt;
 
     await vscode.window.withProgress(
       {
@@ -706,7 +720,7 @@ async function sendMessageToSession(
               "Content-Type": "application/json",
               "X-Goog-Api-Key": apiKey,
             },
-            body: JSON.stringify({ prompt: trimmedPrompt }),
+            body: JSON.stringify({ prompt: finalPrompt }),
           }
         );
 
@@ -918,18 +932,26 @@ export function activate(context: vscode.ExtensionContext) {
           return;
         }
 
-        const trimmedPrompt = result.prompt.trim();
-        if (!trimmedPrompt) {
+        const userPrompt = result.prompt.trim();
+        if (!userPrompt) {
           vscode.window.showWarningMessage(
             "Task description was empty. Session not created."
           );
           return;
         }
 
-        const title = trimmedPrompt.split("\n")[0];
+        const customPrompt = vscode.workspace
+          .getConfiguration("jules-extension")
+          .get<string>("customPrompts", "");
+
+        const finalPrompt = customPrompt
+          ? `custom prompt: "${customPrompt}"\n\n${userPrompt}`
+          : userPrompt;
+
+        const title = userPrompt.split("\n")[0];
         const automationMode = result.createPR ? "AUTO_CREATE_PR" : "MANUAL";
         const requestBody: CreateSessionRequest = {
-          prompt: trimmedPrompt,
+          prompt: finalPrompt,
           sourceContext: {
             source: selectedSource.name || selectedSource.id || "",
             githubRepoContext: {
