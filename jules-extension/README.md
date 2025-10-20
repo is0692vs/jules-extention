@@ -8,6 +8,8 @@
 
 > "Experience the future of coding with Google Jules in VSCode"
 
+[install link](https://marketplace.visualstudio.com/items?itemName=HirokiMukai.jules-extension)
+
 Jules Extension is an extension that allows you to operate Google's AI coding agent **Jules** directly from within VSCode.
 Welcome an intelligent partner to your coding workflow.
 
