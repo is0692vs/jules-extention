@@ -52,26 +52,10 @@
           "description": "Auto-refresh interval in seconds (minimum: 10)"
         },
         "jules-extension.customPrompts": {
-          "type": "array",
-          "default": [],
-          "description": "Custom prompts to be used in the message composer",
-          "items": {
-            "type": "object",
-            "properties": {
-              "label": {
-                "type": "string",
-                "description": "The label for the prompt in the dropdown"
-              },
-              "prompt": {
-                "type": "string",
-                "description": "The content of the prompt"
-              }
-            },
-            "required": [
-              "label",
-              "prompt"
-            ]
-          }
+          "type": "string",
+          "default": "",
+          "description": "Custom prompts for the message composer. Each prompt on a new line: 'Label | Prompt'. Example: 'Fix spelling | Fix spelling mistakes.'",
+          "markdownDescription": "Custom prompts to be used in the message composer. Each prompt should be on a new line in the format `Label | Prompt Text`.\n\n**Example:**\n```\nFix spelling | Fix spelling and grammar mistakes in the selected text.\nSummarize | Summarize the following text.\n```"
         }
       }
     },

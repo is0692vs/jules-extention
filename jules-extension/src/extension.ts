@@ -200,9 +200,29 @@ function resetAutoRefresh(
 }
 
 function getCustomPrompts(): CustomPrompt[] {
-  return vscode.workspace
+  const promptsString = vscode.workspace
     .getConfiguration("jules-extension")
-    .get<CustomPrompt[]>("customPrompts", []);
+    .get<string>("customPrompts", "");
+
+  if (!promptsString) {
+    return [];
+  }
+
+  return promptsString
+    .split("\n")
+    .map((line) => {
+      const parts = line.split("|");
+      if (parts.length < 2) {
+        return null;
+      }
+      const label = parts[0].trim();
+      const prompt = parts.slice(1).join("|").trim();
+      if (!label || !prompt) {
+        return null;
+      }
+      return { label, prompt };
+    })
+    .filter((p): p is CustomPrompt => p !== null);
 }
 
 interface CustomPrompt {
