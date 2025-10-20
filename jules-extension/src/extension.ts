@@ -199,7 +199,7 @@ function resetAutoRefresh(
   startAutoRefresh(context, sessionsProvider);
 }
 
-function getCustomPrompts(): CustomPrompt[] {
+export function getCustomPrompts(): CustomPrompt[] {
   const promptsString = vscode.workspace
     .getConfiguration("jules-extension")
     .get<string>("customPrompts", "");
