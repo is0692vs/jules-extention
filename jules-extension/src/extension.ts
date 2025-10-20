@@ -2,6 +2,9 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 
+// Constants
+const JULES_API_BASE_URL = "https://jules.googleapis.com/v1alpha";
+
 interface Source {
   name?: string;
   id?: string;
@@ -120,12 +123,8 @@ function resolveSessionId(
   );
 }
 
-function extractPRUrl(session: Session): string | null {
-  return session.outputs?.find((o) => o.pullRequest)?.pullRequest?.url || null;
-}
-
-function extractPRUrlFromState(state: SessionState): string | null {
-  return state.outputs?.find((o) => o.pullRequest)?.pullRequest?.url || null;
+function extractPRUrl(sessionOrState: Session | SessionState): string | null {
+  return sessionOrState.outputs?.find((o) => o.pullRequest)?.pullRequest?.url || null;
 }
 
 function checkForCompletedSessions(currentSessions: Session[]): Session[] {
@@ -544,7 +543,7 @@ class JulesSessionsProvider
     try {
       console.log("Jules: Fetching sessions in getChildren...");
       const response = await fetch(
-        "https://jules.googleapis.com/v1alpha/sessions",
+        `${JULES_API_BASE_URL}/sessions`,
         {
           method: "GET",
           headers: {
@@ -681,7 +680,7 @@ async function approvePlan(
       },
       async () => {
         const response = await fetch(
-          `https://jules.googleapis.com/v1alpha/${sessionId}:approvePlan`,
+          `${JULES_API_BASE_URL}/${sessionId}:approvePlan`,
           {
             method: "POST",
             headers: {
@@ -753,7 +752,7 @@ async function sendMessageToSession(
       },
       async () => {
         const response = await fetch(
-          `https://jules.googleapis.com/v1alpha/${sessionId}:sendMessage`,
+          `${JULES_API_BASE_URL}/${sessionId}:sendMessage`,
           {
             method: "POST",
             headers: {
@@ -856,7 +855,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
       try {
         const response = await fetch(
-          "https://jules.googleapis.com/v1alpha/sources",
+          `${JULES_API_BASE_URL}/sources`,
           {
             method: "GET",
             headers: {
@@ -889,7 +888,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
       try {
         const response = await fetch(
-          "https://jules.googleapis.com/v1alpha/sources",
+          `${JULES_API_BASE_URL}/sources`,
           {
             method: "GET",
             headers: {
@@ -1001,7 +1000,7 @@ export function activate(context: vscode.ExtensionContext) {
               message: "Sending request...",
             });
             const response = await fetch(
-              "https://jules.googleapis.com/v1alpha/sessions",
+              `${JULES_API_BASE_URL}/sessions`,
               {
                 method: "POST",
                 headers: {
@@ -1081,7 +1080,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
       try {
         const sessionResponse = await fetch(
-          `https://jules.googleapis.com/v1alpha/${sessionId}`,
+          `${JULES_API_BASE_URL}/${sessionId}`,
           {
             method: "GET",
             headers: {
@@ -1099,7 +1098,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
         const session = (await sessionResponse.json()) as Session;
         const response = await fetch(
-          `https://jules.googleapis.com/v1alpha/${sessionId}/activities`,
+          `${JULES_API_BASE_URL}/${sessionId}/activities`,
           {
             method: "GET",
             headers: {
