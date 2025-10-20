@@ -59,7 +59,7 @@ _(هذا تصور لواجهة المستخدم. قد يختلف العرض ال
 إذا كنت ترغب في تجربة أحدث الميزات التي لم يتم نشرها بعد في Marketplace، يمكنك تنزيل ملف `.vsix` وتثبيته مباشرة من صفحة الإصدارات.
 
 1.  **اذهب إلى صفحة الإصدارات:**
-    قم بزيارة [إصدارات GitHub](https://github.com/your-repo/jules-extension/releases) وابحث عن أحدث إصدار.
+    قم بزيارة [إصدارات GitHub](https://github.com/is0692vs/jules-extension/releases) وابحث عن أحدث إصدار.
 
 2.  **تنزيل ملف VSIX:**
     قم بتنزيل ملف `.vsix` (على سبيل المثال، `jules-extension-0.1.0.vsix`) من قسم `Assets`.

@@ -2,7 +2,7 @@
 
 ![Jules Extension Icon](../jules-extension/icon.png)
 
-[![VSCode Extension](https://img.shields.io/badge/VSCode-Extension-blue.svg)](https://marketplace.visualstudio.com/items?itemName=YOUR_PUBLISHER.jules-extension)
+[![VSCode Extension](https://img.shields.io/badge/VSCode-Extension-blue.svg)](https://marketplace.visualstudio.com/items?itemName=HirokiMukai.jules-extension)
 [![Status](https://img.shields.io/badge/status-development-yellow.svg)](#)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -59,7 +59,7 @@ _（这是一个 UI 概念。实际显示可能会有所不同。）_
 如果您想尝试尚未在 Marketplace 上发布的最新功能，您可以直接从发布页面下载并安装 `.vsix` 文件。
 
 1.  **前往发布页面：**
-    访问 [GitHub Releases](https://github.com/your-repo/jules-extension/releases) 并找到最新的发布版本。
+    访问 [GitHub Releases](https://github.com/is0692vs/jules-extension/releases) 并找到最新的发布版本。
 
 2.  **下载 VSIX 文件：**
     从 `Assets` 中下载 `.vsix` 文件（例如 `jules-extension-0.1.0.vsix`）。
