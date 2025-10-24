@@ -15,9 +15,9 @@ Accueillez un partenaire intelligent dans votre flux de travail de codage.
 
 Cette extension a été créée pour faire passer votre expérience de développement au niveau supérieur.
 
-- **Intégration Transparente :** Accédez aux puissantes fonctionnalités de Jules sans quitter votre environnement VSCode habituel.
-- **Collaboration en Temps Réel :** De la création d'une session de codage à la vérification de sa progression, tout se fait en temps réel.
-- **Saut de Productivité :** Laissez les tâches fastidieuses à Jules et concentrez-vous sur votre travail créatif.
+- **Intégration Transparente :** Accédez aux fonctionnalités puissantes de Jules sans quitter votre environnement VSCode familier.
+- **Collaboration en Temps Réel :** Tout, de la création de sessions de codage à la vérification de la progression, en temps réel.
+- **Augmentation de la Productivité :** Laissez Jules gérer les tâches fastidieuses pendant que vous vous concentrez sur le travail créatif.
 
 ## 🚀 Fonctionnalités Clés
 
@@ -41,78 +41,63 @@ Cette extension a été créée pour faire passer votre expérience de développ
 └──────────────────────────────┘
 ```
 
-_(Ceci est un concept d'interface utilisateur. L'affichage réel peut différer.)_
+_(Ceci est une image de l'interface utilisateur. L'affichage réel peut différer.)_
 
 ## 📦 Installation
 
-Installez depuis [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=HirokiMukai.jules-extension)
+Installez depuis [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=HirokiMukai.jules-extension).
 
-Ou recherchez "Jules Extension" dans la vue des extensions de VS Code.
+Ou recherchez "Jules Extension" dans la vue Extensions de VS Code.
 
 ### Depuis le Marketplace (Recommandé)
 
 1.  Recherchez "Jules Extension" sur le Marketplace de VSCode
 2.  Cliquez sur le bouton `Install`
 
-### Depuis un Fichier VSIX (Installation Manuelle)
-
-Si vous souhaitez essayer les dernières fonctionnalités qui ne sont pas encore publiées sur le Marketplace, vous pouvez télécharger et installer le fichier `.vsix` directement depuis la page des versions.
-
-1.  **Allez à la Page des Versions :**
-    Visitez les [Versions GitHub](https://github.com/your-repo/jules-extension/releases) et trouvez la dernière version.
-
-2.  **Téléchargez le Fichier VSIX :**
-    Téléchargez le fichier `.vsix` (par ex., `jules-extension-0.1.0.vsix`) depuis les `Assets`.
-
-3.  **Installez dans VSCode :**
-    - Ouvrez VSCode.
-    - Allez dans la vue `Extensions` (`Ctrl+Shift+X`).
-    - Cliquez sur le menu `...` (Plus d'Actions) en haut de la vue et sélectionnez `Installer depuis VSIX...`.
-    - Sélectionnez le fichier `.vsix` téléchargé pour l'installer.
-
-## 🔑 Obtenir Votre Clé API
+## 🔑 Obtention d'une Clé API
 
 Pour utiliser l'extension Jules, vous avez besoin d'une clé API Jules. Suivez ces étapes pour en obtenir une :
 
 1.  **Créez un Compte :**
 
-    - Allez sur le [Site Officiel de Jules](https://jules.google/docs).
-    - Inscrivez-vous pour un nouveau compte ou connectez-vous si vous en avez déjà un.
+    - Visitez le [Site Officiel de Jules](https://jules.google/docs).
+    - Enregistrez un nouveau compte ou connectez-vous avec un compte existant.
 
-2.  **Générez la Clé API :**
+2.  **Générez une Clé API :**
 
-    - Accédez à la section "Clés API" ou "Paramètres du Développeur" dans votre tableau de bord.
-    - Cliquez sur "Créer une nouvelle clé secrète".
-    - Donnez un nom descriptif à votre clé (par ex., "Extension VSCode") et générez-la.
+    - Dans votre tableau de bord de compte, accédez à la section "Clés API" ou "Paramètres du Développeur".
+    - Cliquez sur "Créer une Nouvelle Clé Secrète".
+    - Donnez à la clé un nom facile à comprendre (par ex., "Extension VSCode") et générez-la.
 
-3.  **Copiez Votre Clé :**
+3.  **Copiez la Clé :**
     - Votre nouvelle clé API sera affichée. Copiez-la dans votre presse-papiers.
-    - Si vous avez besoin de revoir votre clé plus tard, vous pouvez toujours la trouver sur votre page de paramètres Jules.
+    - Si vous avez besoin de vérifier la clé à nouveau plus tard, vous pouvez toujours la consulter sur la page de paramètres de Jules.
 
 > **Important :** Traitez votre clé API comme un mot de passe. Ne la partagez pas publiquement et ne la commitez pas dans le contrôle de version.
 
 ## Démarrage Rapide
 
-1.  Appuyez sur `Ctrl + Shift + P` (ou `Cmd + Shift + P`) pour ouvrir la Palette de Commandes.
-2.  Exécutez `> Jules: Set Jules API Key` et entrez votre clé API.
+1.  Ouvrez la Palette de Commandes avec `Ctrl + Shift + P` (ou `Cmd + Shift + P`).
+2.  Exécutez `> Jules: Set Jules API Key` pour configurer votre clé API.
 3.  Cliquez sur l'icône `$(robot)` dans la barre latérale pour ouvrir la Vue des Sessions Jules.
 4.  Exécutez `> Jules: Create Jules Session` pour démarrer votre première session de codage !
 
-## ⚠️ Remarques Importantes
+## 📚 Références
 
-- **Rendu des Blocs de Cartes :** Lorsque vous utilisez des fonctionnalités affichées sous forme de blocs de cartes, veuillez faire attention à la structure du contenu pour garantir un rendu correct.
-
-## 📚 Liens
-
-- [Marketplace](https://marketplace.visualstudio.com/items?itemName=HirokiMukai.jules-extension)
-- [GitHub Repository](https://github.com/is0692vs/jules-extension.git)
-- [Report Issues](https://github.com/is0692vs/jules-extension/issues)
+- [Site Officiel de Jules](https://jules.google/docs)
+- [Documentation de l'API Jules](https://developers.google.com/jules/api)
 
 ## 🤝 Contribution
 
 Ce projet ne fait que commencer. Nous accueillons toutes les formes de contribution, y compris les rapports de bogues, les suggestions de fonctionnalités et les pull requests !
 Veuillez consulter le Suivi des Problèmes et les Pull Requests.
 
+## � Liens
+
+- [Marketplace](https://marketplace.visualstudio.com/items?itemName=HirokiMukai.jules-extension)
+- [Dépôt GitHub](https://github.com/is0692vs/jules-extension.git)
+- [Signaler des Problèmes](https://github.com/is0692vs/jules-extension/issues)
+
 ## 📝 Licence
 
-[MIT](LICENSE)
+[MIT](../../LICENSE)
