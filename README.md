@@ -1,6 +1,5 @@
 # Jules Extension for VSCode
 
-![Jules Extension Icon](./jules-extension/icon.png)
 
 [![VSCode Extension](https://img.shields.io/badge/VSCode-Extension-blue.svg)](https://marketplace.visualstudio.com/items?itemName=YOUR_PUBLISHER.jules-extension)
 [![Status](https://img.shields.io/badge/status-development-yellow.svg)](#)
