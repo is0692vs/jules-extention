@@ -13,12 +13,13 @@ Welcome an intelligent companion into your coding workflow.
 
 **Read this in other languages:**
 
-- [العربية (Arabic)](./docs/ar/README.md)
 - [Español (Spanish)](./docs/es/README.md)
 - [Français (French)](./docs/fr/README.md)
 - [日本語 (Japanese)](./docs/ja/README.md)
 - [한국어 (Korean)](./docs/ko/README.md)
 - [中文 (Chinese)](./docs/zh/README.md)
+- [العربية (Arabic)](./docs/ar/README.md
+
 
 ## ✨ Concept
 
