@@ -29,19 +29,6 @@ This extension was created to take your development experience to the next level
 | **Progress Updates**     | When you're curious about how far Jules has progressed, click the `↻` (refresh) button. Instantly retrieve and update the session status and the latest activity list performed by Jules.                               | `jules-extension.refreshSessions` |
 | **Activity Display**     | When you select a session, you can check detailed logs of commands Jules executed, files edited, thought processes, and more. Provides a transparent development experience, as if you're peering into Jules' thinking. | `jules-extension.showActivities`  |
 
-### Preview: Jules Sessions View
-
-```
-┌──────────────────────────────┐
-│ ▼ JULES SESSIONS        ↻    │
-├──────────────────────────────┤
-│  ▶ session-xyz-123 (Running) │
-│  ▶ session-abc-456 (Active)  │
-│  ⏹ session-def-789 (Done)    │
-└──────────────────────────────┘
-```
-
-_(This is a UI image. Actual display may differ.)_
 
 ## 📦 Installation
 

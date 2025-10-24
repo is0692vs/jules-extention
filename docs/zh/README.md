@@ -29,20 +29,6 @@ Jules 扩展程序是一个扩展，可让您直接在 VSCode 中操作 Google �
 | **进度更新**     | 当您好奇 Jules 进展到哪里时，点击 `↻`（刷新）按钮。立即检索并更新 Jules 执行的会话状态和最新活动列表。                                  | `jules-extension.refreshSessions` |
 | **活动显示**     | 当您选择一个会话时，可以查看 Jules 执行的命令、编辑的文件、思维过程等的详细日志。提供透明的开发体验，就像您正在窥视 Jules 的思考一样。  | `jules-extension.showActivities`  |
 
-### 预览：Jules 会话视图
-
-\`\`\`
-┌──────────────────────────────┐
-│ ▼ JULES SESSIONS ↻ │
-├──────────────────────────────┤
-│ ▶ session-xyz-123 (Running) │
-│ ▶ session-abc-456 (Active) │
-│ ⏹ session-def-789 (Done) │
-└──────────────────────────────┘
-\`\`\`
-
-_（这是一个 UI 图像。实际显示可能会有所不同。）_
-
 ## 📦 安装
 
 从 [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=HirokiMukai.jules-extension) 安装。
